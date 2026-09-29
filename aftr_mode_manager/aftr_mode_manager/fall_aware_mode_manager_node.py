@@ -22,6 +22,7 @@ class FallAwareModeStatus(ModeStatus):
     """Extend the existing operator status with fall-safety fields."""
 
     def __init__(self):
+        """Initialize fall-detector and safety-stop status fields."""
         super().__init__()
         self.fall_detector_alive = False
         self.fall_detection_status = "UNKNOWN"

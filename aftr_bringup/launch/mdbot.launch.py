@@ -22,7 +22,6 @@ def generate_launch_description():
     lidar_params_file = os.path.join(pkg_bringup, "config", "sllidar_params.yaml")
     filter_params_file = os.path.join(pkg_bringup, "config", "laser_filter_params.yaml")
 
-    # === [ros2_control] User Code Begin === #
     node_robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -72,10 +71,7 @@ def generate_launch_description():
             on_exit=[node_diff_drive_controller_spawner],
         )
     )
-    # === [ros2_control] User Code End === #
 
-    # === [LiDAR] User Code Begin === #
-    # LiDAR.
     lidar_node = Node(
         package="sllidar_ros2",
         executable="sllidar_node",
@@ -84,15 +80,14 @@ def generate_launch_description():
         remappings=[("/scan", "/scan_unfiltered")],
     )
 
-    # Laser filter.
     laser_filter_node = Node(
         package="laser_filters",
         executable="scan_to_scan_filter_chain",
         name="laser_filter",
         parameters=[filter_params_file],
         remappings=[
-            ("/scan", "/scan_unfiltered"),  # Filter input.
-            ("/scan_filtered", "/scan"),  # Publish the filtered scan on /scan.
+            ("/scan", "/scan_unfiltered"),
+            ("/scan_filtered", "/scan"),
         ],
     )
 
@@ -101,8 +96,6 @@ def generate_launch_description():
         period=1.0,
         actions=[laser_filter_node],
     )
-
-    # === [LiDAR] User Code End === #
 
     return LaunchDescription(
         [

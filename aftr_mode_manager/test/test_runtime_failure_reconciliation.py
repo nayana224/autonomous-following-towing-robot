@@ -66,7 +66,7 @@ def test_path_manager_exit_during_driving_stops_motion_and_sets_error():
 
 
 def test_irrelevant_process_exit_does_not_change_active_mode():
-    """RViz loss must not stop an otherwise healthy autonomous runtime."""
+    """An RViz exit must not stop an otherwise healthy autonomous runtime."""
     manager = ModeManagerNode.__new__(ModeManagerNode)
     manager.status = SimpleNamespace(mode=RobotMode.AUTONOMOUS_DRIVING)
     manager.follower_node = _Process(running=False)

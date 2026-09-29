@@ -3,7 +3,7 @@
 <package format="3">
   <name>aftr_slam</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>SLAM Toolbox launch and mapping configuration for Autonomous Following and Towing Robot.</description>
   <maintainer email="inpyoi1304@gmail.com">pyo</maintainer>
   <license>TODO: License declaration</license>
 

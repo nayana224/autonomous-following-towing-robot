@@ -8,15 +8,12 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
-# === User Code Begin === # 
-
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_lifecycle REQUIRED)
 find_package(serial REQUIRED) 
 
-# 노드가 아닌 공유 라이브러리(.so)로 빌드합니다.
 add_library(mdbot_hardware SHARED
   src/md_driver.cpp
   src/md_packet.cpp
@@ -36,7 +33,6 @@ ament_target_dependencies(mdbot_hardware
   serial
 )
 
-# 플러그인 XML 파일을 Export 합니다.
 pluginlib_export_plugin_description_file(hardware_interface mdbot_hardware.xml)
 
 install(TARGETS mdbot_hardware
@@ -61,6 +57,5 @@ ament_export_dependencies(
 ament_export_include_directories(include)
 ament_export_libraries(mdbot_hardware)
 
-# === User Code End === #
 
 ament_package()

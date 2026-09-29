@@ -7,8 +7,8 @@
 
 ## Reading Order
 
-1. `Documents/mdbot_hardware_analysis.md`
-2. `Documents/md_packet_protocol.md`
+1. `docs/hardware_analysis.md`
+2. `docs/md_packet_protocol.md`
 3. `src/md_packet.cpp`
 4. `src/md_driver.cpp`
 5. `src/md_hardware_interface.cpp`

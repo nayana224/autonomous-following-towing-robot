@@ -345,7 +345,6 @@ https://cad.onshape.com/documents/d61cbededb8f51a349e3199e/w/e73eec0a43e2ad78caa
   </xacro:if>
 
 
-  <!-- [Additional Frame] User Code Begin -->
 
   <!-- base_footprint -->
   <link name="base_footprint" />
@@ -363,10 +362,8 @@ https://cad.onshape.com/documents/d61cbededb8f51a349e3199e/w/e73eec0a43e2ad78caa
     <parent link="base_link" />
     <child link="laser" />
   </joint>
-  <!-- [Additional Frame] User Code End -->
 
 
-  <!-- [ros2_control] User Code Begin -->
   <ros2_control name="MDBotSystem" type="system">
     <hardware>
       <xacro:unless value="$(arg use_sim)">
@@ -392,9 +389,7 @@ https://cad.onshape.com/documents/d61cbededb8f51a349e3199e/w/e73eec0a43e2ad78caa
       <state_interface name="velocity" />
     </joint>
   </ros2_control>
-  <!-- [ros2_control] User Code End -->
 
-  <!-- [Gazebo] User Code Begin -->
   <xacro:if value="$(arg use_sim)">
 
     <gazebo reference="right_caster_wheel_link">
@@ -472,5 +467,4 @@ https://cad.onshape.com/documents/d61cbededb8f51a349e3199e/w/e73eec0a43e2ad78caa
     </gazebo>
   </xacro:if>
 
-  <!-- [Gazebo] User Code End -->
 </robot>
