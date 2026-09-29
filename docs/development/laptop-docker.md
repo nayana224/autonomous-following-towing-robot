@@ -123,7 +123,7 @@ Container shell은 `/workspace`에서 시작합니다.
 colcon --log-base log_laptop build --build-base build_laptop --install-base install_laptop --symlink-install
 ```
 
-추가 인자는 Build script가 colcon에 전달합니다. 예: `./src/autonomous-following-towing-robot/scripts/build_ws.sh --parallel-workers 2`. Phase 1 전체 Build는 외부 3개와 `aftr_*` 13개, 합계 16개 Package에서 성공했습니다. 외부 저장소 소스는 수정하지 않습니다.
+Build script의 기본 target은 계속 Laptop이며 Jetson 실행 script가 별도 target을 설정합니다. 추가 인자는 Build script가 colcon에 전달합니다. 예: `./src/autonomous-following-towing-robot/scripts/build_ws.sh --parallel-workers 2`. Phase 1 전체 Build는 외부 3개와 `aftr_*` 13개, 합계 16개 Package에서 성공했습니다. 외부 저장소 소스는 수정하지 않습니다.
 
 ## 7. Overlay source
 
@@ -133,7 +133,7 @@ colcon --log-base log_laptop build --build-base build_laptop --install-base inst
 source /workspace/install_laptop/setup.bash
 ```
 
-새 Container를 열면 기존 Laptop overlay는 자동으로 읽힙니다. Package import가 안 되면 `ROS_DISTRO`와 overlay 경로를 먼저 확인합니다.
+새 Container를 열면 기존 Laptop overlay는 자동으로 읽힙니다. 공유 Entrypoint의 기본값은 계속 `install_laptop`입니다. Jetson 실행 script만 `install_jetson`을 선택합니다. Package import가 안 되면 `ROS_DISTRO`와 overlay 경로를 먼저 확인합니다.
 
 ## 8. Package 확인
 
@@ -204,7 +204,7 @@ Phase 1 검증 결과와 기존 lint 실패 내역은 [Testing](../testing.md)�
 - 기존 lint/docstring 실패 4개가 남아 있습니다.
 - 실제 motor, LiDAR, RealSense, GPIO, GPU inference 및 전체 operator hardware Launch는 이 환경에서 검증하지 않았습니다.
 - GUI launch의 Ctrl-C 종료 후 RViz2가 exit code -11로 끝났습니다. 실행 중 GUI 창과 OpenGL 초기화는 확인했지만 종료 시 segfault 원인은 아직 조사하지 않았습니다.
-- Jetson Docker는 구현 전이며 JetPack/L4T 버전도 미정입니다.
+- Jetson Docker 사용 방법은 [Jetson Docker Development](jetson-docker.md)를 참고하세요. Jetson image와 hardware 검증은 별도로 필요합니다.
 
 ## 15. Troubleshooting
 

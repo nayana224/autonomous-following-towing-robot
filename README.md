@@ -18,7 +18,7 @@ ROS 2 Humble 기반의 작업자 추종 및 견인 로봇 프로젝트입니다.
 | Program | 한이음 드림업 |
 | Platform | ROS 2 Humble |
 | Target Hardware | NVIDIA Jetson Orin Nano |
-| Development | Linux amd64 Host + Docker |
+| Development | Linux amd64 Laptop / Jetson arm64 + Docker |
 
 ## Team
 
@@ -39,7 +39,7 @@ ROS 2 Humble 기반의 작업자 추종 및 견인 로봇 프로젝트입니다.
 
 ## Quick Start
 
-Host에서 Laptop Docker image를 빌드하고 Container shell을 엽니다.
+Laptop (Linux amd64) Host에서 Docker image를 빌드하고 Container shell을 엽니다.
 
 ```bash
 cd ~/autonomous_following_towing_robot_ws/src/autonomous-following-towing-robot
@@ -56,6 +56,19 @@ source /workspace/install_laptop/setup.bash
 
 실행 script는 Host Workspace의 `models/`를 Container `/models`에 읽기 전용으로, `data/`를 `/data`에 읽기·쓰기용으로 연결합니다. 모델은 `models/fall_detection/yolov8n-pose.pt`에 준비하세요. 상세 경로와 override는 [Laptop Docker Development](docs/development/laptop-docker.md)를 참고하세요.
 
+Jetson Orin Nano Super (arm64)에서는 다음 명령을 사용합니다.
+
+```bash
+cd ~/260929_ws/src/autonomous-following-towing-robot
+./scripts/docker_build_jetson.sh
+./scripts/docker_run_jetson.sh
+# Container 안에서
+./src/autonomous-following-towing-robot/scripts/build_ws.sh
+source /workspace/install_jetson/setup.bash
+```
+
+Jetson image는 CUDA PyTorch와 ROS 2 Humble을 사용합니다. 동일한 `/models:ro`, `/data:rw` 경로를 사용하며, `build_jetson/install_jetson/log_jetson`은 Laptop 산출물과 분리합니다. 준비 사항과 hardware 전달 방법은 [Jetson Docker Development](docs/development/jetson-docker.md)를 참고하세요.
+
 상세 Build, Test 및 troubleshooting은 [Laptop Docker Development](docs/development/laptop-docker.md)를 참고하세요.
 
 ## Development Environment
@@ -66,7 +79,7 @@ source /workspace/install_laptop/setup.bash
 
 ### Jetson Orin Nano
 
-NVIDIA Jetson Orin Nano는 실제 Robot deployment 대상입니다. CUDA, RealSense, LiDAR, serial motor, GPIO와 GPU inference는 Jetson에서 검증합니다. Jetson Docker는 아직 구현되지 않았으며 JetPack/L4T 확인 후 별도 구성합니다.
+NVIDIA Jetson Orin Nano Super는 실제 Robot deployment 대상입니다. Ubuntu 22.04, L4T 36.5.2, CUDA 12.6 Host에서 NVIDIA Container Runtime을 사용합니다. Jetson Docker image에서 CUDA tensor 연산, Python 3.10/ROS Humble 및 16개 Workspace package Build를 확인했습니다. RealSense 촬영, motor/LiDAR 통신, GPIO 출력과 GUI 표시는 별도 hardware 검증이 필요합니다.
 
 ## Packages
 
@@ -95,9 +108,12 @@ NVIDIA Jetson Orin Nano는 실제 Robot deployment 대상입니다. CUDA, RealSe
 │   ├── laser_filters/
 │   ├── serial-ros2/
 │   └── sllidar_ros2/
-├── build_laptop/
+├── build_laptop/             # amd64 전용
 ├── install_laptop/
-└── log_laptop/
+├── log_laptop/
+├── build_jetson/             # arm64 전용
+├── install_jetson/
+└── log_jetson/
 ```
 
 세 external sibling은 독립 Git repository입니다. `serial-ros2`의 ROS Package 이름은 `serial`이며, Laptop 산출물은 Jetson arm64 산출물과 공유하지 않습니다.
@@ -105,6 +121,7 @@ NVIDIA Jetson Orin Nano는 실제 Robot deployment 대상입니다. CUDA, RealSe
 ## Documentation
 
 - [Laptop Docker Development](docs/development/laptop-docker.md)
+- [Jetson Docker Development](docs/development/jetson-docker.md)
 - [Setup](docs/setup.md)
 - [Architecture](docs/architecture.md)
 - [Operation](docs/operation.md)

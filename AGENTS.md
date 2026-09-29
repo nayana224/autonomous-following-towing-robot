@@ -35,7 +35,7 @@
 
 ## Build and Test
 
-The commands below describe the existing manual `build/install/log` layout. For Laptop Docker, follow `docs/development/laptop-docker.md` and its `*_laptop` paths.
+The commands below describe the existing manual `build/install/log` layout. For Docker, follow `docs/development/laptop-docker.md` or `docs/development/jetson-docker.md` and the architecture-specific paths.
 
 - Source ROS before ROS-related commands when needed: `source /opt/ros/humble/setup.bash`.
 - Source the workspace after building when needed: `source install/setup.bash`.
@@ -43,7 +43,7 @@ The commands below describe the existing manual `build/install/log` layout. For 
 - Run focused tests with `colcon test --packages-select <package>`.
 - Check results with `colcon test-result --verbose`.
 
-## Laptop Docker and Architecture Boundaries
+## Docker and Architecture Boundaries
 
 - Laptop development and CI use the Ubuntu 22.04 / ROS 2 Humble CPU-only Docker image in `docker/laptop/`.
 - The laptop run script enables X11/XWayland GUI forwarding by default when a usable Host display exists; use `--headless` for CI or explicit offscreen runs. GUI access does not imply CUDA or GPU compute support.
@@ -51,21 +51,24 @@ The commands below describe the existing manual `build/install/log` layout. For 
 - Container applications must run with the Host UID/GID. The runtime must provide valid passwd/group entries and a writable HOME for that identity.
 - Use narrow display access instead of a privileged container; GUI infrastructure changes must preserve ROS runtime interfaces.
 - Keep CUDA, TensorRT, NVIDIA Container Runtime, Jetson.GPIO, and Jetson-specific packages out of the laptop image and shared dependency lists.
+- Jetson Orin Nano Super uses `docker/jetson/` with NVIDIA's Jetson L4T CUDA 12.6 runtime image, JetPack 6 CUDA 12.6 arm64 PyTorch wheels, and ROS 2 Humble on Jammy. Do not use the NVIDIA PyTorch 24.10 iGPU container: it requires driver 560+, while this robot uses driver 540.5.0. The Jetson image has passed CUDA matmul and a 16-package build on L4T 36.5.2. Keep the robot-tested external source unchanged.
+- Jetson container startup uses NVIDIA runtime, explicit devices, stable `/dev/ttyMotor` and `/dev/ttyLidar` aliases, and host networking for ROS discovery. Never start motor or autonomous motion during unattended validation.
+- `scripts/build_ws.sh` defaults to Laptop outputs; the Jetson run script sets `AFTR_BUILD_TARGET=jetson` and `AFTR_INSTALL_BASE=install_jetson`. Do not source or reuse an overlay from the other architecture.
 - Keep common dependencies architecture-neutral where possible; isolate future Jetson dependencies.
 - Hardware-dependent tests are not required for laptop CI. Do not run the default operator-system or motor bringup launch in laptop validation.
 - Use `/models` for read-only model files and `/data` for writable paths, maps, and poses. Do not add personal `/home/...` defaults; keep ROS parameters available for overrides.
-- Never share colcon build, install, or log outputs between amd64 and arm64 environments. Laptop Docker uses `build_laptop/`, `install_laptop/`, and `log_laptop/`; keep these separate from host or future Jetson outputs.
-- Update `docs/development/laptop-docker.md` when Docker scripts, dependency versions, Workspace paths, or validation commands change; keep a short summary in `README.md`.
+- Never share colcon build, install, or log outputs between amd64 and arm64 environments. Laptop Docker uses `build_laptop/`, `install_laptop/`, and `log_laptop/`; Jetson uses `build_jetson/`, `install_jetson/`, and `log_jetson/`. Keep these separate from host outputs.
+- Update the relevant `docs/development/*-docker.md` guide when Docker scripts, dependency versions, workspace paths, or validation commands change; keep a short summary in `README.md`.
 - Docker changes must preserve ROS runtime interfaces and hardware-sensitive behavior.
 - The production GUI entry point is `aftr_gui.operator_gui:main`; preserve safety-stop rendering, release confirmation, snapshot handling, and mode-manager ownership of automatic base startup.
 - Do not refactor `aftr_tracking`, `aftr_fall_detection`, `aftr_status_led`, or `aftr_path_manager` source outside explicit scope; path-only portability edits are the current exception.
 
 ## Documentation Rules
 
-- Write `AGENTS.md` and code comments in English. Write the main `README.md` and `docs/development/laptop-docker.md` primarily in Korean while retaining technical terms in English. Preserve the language of other existing docs unless a task requests a change.
+- Write `AGENTS.md` and code comments in English. Write the main `README.md` and `docs/development/*-docker.md` primarily in Korean while retaining technical terms in English. Preserve the language of other existing docs unless a task requests a change.
 - Update documentation whenever package boundaries, ROS interfaces, architecture, workflow assumptions, or safety behavior change.
 - Keep this `AGENTS.md` aligned with the current repository structure, package boundaries, and project-wide development rules.
-- Keep `README.md` concise as the project entry point; place detailed Laptop Docker commands in `docs/development/laptop-docker.md`.
+- Keep `README.md` concise as the project entry point; place detailed Docker commands in the matching `docs/development/*-docker.md` guide.
 - Keep README Quick Start to Docker image build, Container start, Workspace Build, and overlay source. Put Test commands, validation baselines, and known failures in `docs/testing.md` or the Laptop Docker guide.
 - Describe Linux amd64 with Docker as the intended Laptop environment; identify Ubuntu 26 LTS amd64 separately as the verified Phase 1 host. Avoid volatile Test counts in README.
 - Put long explanations, design rationale, and refactoring guidance in `docs/`.
