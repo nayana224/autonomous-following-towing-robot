@@ -1,0 +1,26 @@
+# Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
+# Ubuntu 22.04 tools and Python packages used by ROS packages and tests.
+build-essential
+cmake
+git
+libgl1
+libglib2.0-0
+fonts-noto-cjk
+python3-dev
+python3-pip
+python3-setuptools
+python3-colcon-common-extensions
+python3-rosdep
+python3-pytest
+python3-opencv
+python3-numpy
+python3-yaml
+python3-pyqt5
+python3-pygame
+python3-matplotlib
+python3-scipy
+python3-pandas
+python3-psutil
+python3-seaborn
+python3-tqdm
+python3-requests

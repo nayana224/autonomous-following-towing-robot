@@ -1,0 +1,241 @@
+bgm:
+  autonomous_bgm:
+    file: autonomous_moving_bgm.wav
+    fallback_files:
+      - moving.wav
+    loop: true
+    volume: 0.5
+
+sfx:
+  system_ready:
+    file: system_ready.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  autonomous_start:
+    file: autonomous_start.wav
+    fallback_files:
+      - start.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  autonomous_ready:
+    file: autonomous_ready_to_start.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  arrived:
+    file: autonomous_arrived.wav
+    fallback_files:
+      - arrived.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: true
+    playback_mode: queue
+
+  blocked:
+    file: autonomous_blocked.wav
+    fallback_files:
+      - blocked.wav
+    cooldown_sec: 3.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  failed:
+    file: autonomous_failed.wav
+    fallback_files:
+      - failed.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: true
+    playback_mode: queue
+
+  follow_start:
+    file: follow_start.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  recording_follow_start:
+    file: recording_follow_start.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  worker_detected:
+    file: follow_worker_detected.wav
+    fallback_files:
+      - worker.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  worker_lost:
+    file: follow_worker_searching.wav
+    fallback_files:
+      - worker_searching.wav
+      - worker_missed.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  alignment_request:
+    file: alignment_request.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  alignment_confirmation_request:
+    file: alignment_confirmation_request.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  alignment_completed:
+    file: alignment_completed.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  follow_end:
+    file: follow_end.wav
+    fallback_files:
+      - end.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  recording_follow_completed:
+    file: recording_follow_completed.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  return_to_home:
+    file: return_to_home.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: queue
+
+  fall_safety_stop:
+    file: fall_safety_stop.wav
+    cooldown_sec: 5.0
+    volume: 1.0
+    stop_bgm_before_play: true
+    playback_mode: interrupt
+
+  safety_clear_rejected:
+    file: safety_clear_rejected.wav
+    cooldown_sec: 3.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: interrupt
+
+  safety_stop_cleared:
+    file: safety_stop_cleared.wav
+    cooldown_sec: 1.0
+    volume: 1.0
+    stop_bgm_before_play: false
+    playback_mode: interrupt
+
+events:
+  system_ready:
+    type: sfx
+    key: system_ready
+
+  autonomous_start:
+    type: sfx
+    key: autonomous_start
+
+  autonomous_ready:
+    type: sfx
+    key: autonomous_ready
+
+  autonomous_bgm_start:
+    type: bgm_start
+    key: autonomous_bgm
+
+  autonomous_bgm_stop:
+    type: bgm_stop
+    key: autonomous_bgm
+
+  arrived:
+    type: sfx
+    key: arrived
+
+  blocked:
+    type: sfx
+    key: blocked
+
+  failed:
+    type: sfx
+    key: failed
+
+  follow_start:
+    type: sfx
+    key: follow_start
+
+  recording_follow_start:
+    type: sfx
+    key: recording_follow_start
+
+  worker_detected:
+    type: sfx
+    key: worker_detected
+
+  worker_lost:
+    type: sfx
+    key: worker_lost
+
+  alignment_request:
+    type: sfx
+    key: alignment_request
+
+  alignment_confirmation_request:
+    type: sfx
+    key: alignment_confirmation_request
+
+  alignment_completed:
+    type: sfx
+    key: alignment_completed
+
+  follow_end:
+    type: sfx
+    key: follow_end
+
+  recording_follow_completed:
+    type: sfx
+    key: recording_follow_completed
+
+  return_to_home:
+    type: sfx
+    key: return_to_home
+
+  fall_safety_stop:
+    type: sfx
+    key: fall_safety_stop
+
+  safety_clear_rejected:
+    type: sfx
+    key: safety_clear_rejected
+
+  safety_stop_cleared:
+    type: sfx
+    key: safety_stop_cleared

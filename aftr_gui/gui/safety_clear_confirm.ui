@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SafetyClearConfirmDialog</class>
+ <widget class="QDialog" name="SafetyClearConfirmDialog">
+  <property name="windowTitle"><string>안전 정지 해제 확인</string></property>
+  <property name="minimumSize"><size><width>620</width><height>380</height></size></property>
+  <property name="modal"><bool>true</bool></property>
+  <property name="styleSheet">
+   <string notr="true">QDialog { background:#FFFFFF; }
+QLabel#label_confirm_title { color:#7F1D1D; font-size:25pt; font-weight:900; }
+QLabel#label_confirm_message { color:#111827; font-size:18pt; font-weight:700; }
+QFrame#confirm_warning_card { background:#FFF7ED; border:2px solid #F59E0B; border-radius:12px; }
+QLabel#label_confirm_warning { color:#78350F; font-size:16pt; font-weight:700; }
+QPushButton { min-height:88px; border-radius:14px; padding:14px 22px; font-size:20pt; font-weight:900; }
+QPushButton#btn_confirm_cancel { background:#E5E7EB; color:#111827; border:3px solid #9CA3AF; }
+QPushButton#btn_confirm_cancel:pressed { background:#CBD5E1; border-color:#64748B; padding-top:18px; padding-bottom:10px; }
+QPushButton#btn_confirm_clear { background:#B91C1C; color:#FFFFFF; border:3px solid #7F1D1D; }
+QPushButton#btn_confirm_clear:pressed { background:#7F1D1D; border-color:#450A0A; padding-top:18px; padding-bottom:10px; }</string>
+  </property>
+  <layout class="QVBoxLayout" name="confirmRootLayout">
+   <property name="spacing"><number>20</number></property>
+   <property name="leftMargin"><number>30</number></property>
+   <property name="topMargin"><number>28</number></property>
+   <property name="rightMargin"><number>30</number></property>
+   <property name="bottomMargin"><number>28</number></property>
+   <item>
+    <widget class="QLabel" name="label_confirm_title">
+     <property name="text"><string>안전 정지를 해제하시겠습니까?</string></property>
+     <property name="alignment"><set>Qt::AlignCenter</set></property>
+     <property name="wordWrap"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="label_confirm_message">
+     <property name="text"><string>작업자와 주변 환경이 안전한지 직접 확인한 뒤 해제해 주세요.</string></property>
+     <property name="alignment"><set>Qt::AlignCenter</set></property>
+     <property name="wordWrap"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="confirm_warning_card">
+     <layout class="QVBoxLayout" name="warningLayout">
+      <property name="leftMargin"><number>18</number></property>
+      <property name="topMargin"><number>16</number></property>
+      <property name="rightMargin"><number>18</number></property>
+      <property name="bottomMargin"><number>16</number></property>
+      <item>
+       <widget class="QLabel" name="label_confirm_warning">
+        <property name="text"><string>해제 후에는 이전 작업을 재개하지 않고 초기 화면으로 돌아갑니다.</string></property>
+        <property name="alignment"><set>Qt::AlignCenter</set></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="confirmButtonsLayout">
+     <property name="spacing"><number>22</number></property>
+     <item><widget class="QPushButton" name="btn_confirm_cancel"><property name="text"><string>취소</string></property></widget></item>
+     <item><widget class="QPushButton" name="btn_confirm_clear"><property name="text"><string>확인 후 해제</string></property></widget></item>
+    </layout>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

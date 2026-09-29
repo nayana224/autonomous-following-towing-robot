@@ -1,0 +1,13 @@
+{
+    "configuration": "default",
+    "documentId": "d61cbededb8f51a349e3199e",
+    "documentMicroversion": "bd98242cfe976fe4a62c2499",
+    "elementId": "278d9b00a58733ebc9f8858f",
+    "fullConfiguration": "default",
+    "id": "Mx5DWhyK70AmkXcMB",
+    "isStandardContent": false,
+    "name": "lidar_link <1>",
+    "partId": "KFbS",
+    "suppressed": false,
+    "type": "Part"
+}

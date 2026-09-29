@@ -1,0 +1,476 @@
+<?xml version="1.0"?>
+<!-- Copyright (c) 2026 Autonomous Following and Towing Robot Contributors -->
+<!-- Generated using onshape-to-robot -->
+<!-- Onshape
+https://cad.onshape.com/documents/d61cbededb8f51a349e3199e/w/e73eec0a43e2ad78caa462bb/e/fefe55f6c463d7e67e298e9a -->
+<robot name="mdbot" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <!-- Measured center-to-center distance between the drive wheels [m]. -->
+  <xacro:property name="wheel_separation" value="0.600" />
+  <!-- CAD wheel geometry is offset outward from each joint frame [m]. -->
+  <xacro:property name="wheel_geometry_offset" value="0.0596" />
+  <!-- Link base_link -->
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0.348081 -3.1382e-05 0.168034" rpy="0 0 0" />
+      <mass value="44.4455" />
+      <inertia ixx="2.66335" ixy="0.000405152" ixz="0.158752" iyy="4.56753" iyz="7.34884e-05"
+        izz="5.14958" />
+    </inertial>
+    <!-- Part base_link -->
+    <visual>
+      <origin xyz="0.3349 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/base_link.stl" />
+      </geometry>
+      <material name="base_link_material">
+        <color rgba="0.701961 0.701961 0.701961 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.3349 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/base_link.stl" />
+      </geometry>
+    </collision>
+    <!-- Part lidar_link -->
+    <visual>
+      <origin xyz="0.645941 -0.000234323 0.0293" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/lidar_link.stl" />
+      </geometry>
+      <material name="lidar_link_material">
+        <color rgba="0.0392157 0.00392157 0.00392157 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0.645941 -0.000234323 0.0293" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/lidar_link.stl" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link left_wheel_link -->
+  <link name="left_wheel_link">
+    <inertial>
+      <origin xyz="0.0480813 0.0596382 4.29146e-07" rpy="0 0 0" />
+      <mass value="6.40019" />
+      <inertia ixx="0.019331" ixy="-2.98812e-05" ixz="-3.04452e-07" iyy="0.0242262"
+        iyz="-1.65571e-08" izz="0.0242286" />
+    </inertial>
+    <!-- Part left_wheel_link -->
+    <visual>
+      <origin xyz="-5.32907e-18 0.0596 1.38778e-17" rpy="1.83697e-16 1.2326e-32 -6.12323e-17" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/left_wheel_link.stl" />
+      </geometry>
+      <material name="left_wheel_link_material">
+        <color rgba="0.176471 0.184314 0.196078 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin xyz="-5.32907e-18 0.0596 1.38778e-17" rpy="1.83697e-16 1.2326e-32 -6.12323e-17" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/left_wheel_link.stl" />
+      </geometry>
+    </collision> -->
+    <collision>
+      <origin xyz="0 0.0596 0" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.103" length="0.05" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from base_link to left_wheel_link -->
+  <joint name="left_wheel_joint" type="continuous">
+    <origin xyz="1.51864e-18 ${wheel_separation / 2.0 - wheel_geometry_offset} -0.075" rpy="-2.23139e-17 3.5462e-30 -5.72119e-18" />
+    <parent link="base_link" />
+    <child link="left_wheel_link" />
+    <axis xyz="0 1 0" />
+    <limit effort="16.0" velocity="31.416" />
+  </joint>
+  <!-- Link right_wheel_link -->
+  <link name="right_wheel_link">
+    <inertial>
+      <origin xyz="0.0480813 -0.0595618 4.29146e-07" rpy="0 0 0" />
+      <mass value="6.40019" />
+      <inertia ixx="0.019331" ixy="-2.98812e-05" ixz="-3.04452e-07" iyy="0.0242262"
+        iyz="-1.65571e-08" izz="0.0242286" />
+    </inertial>
+    <!-- Part right_wheel_link -->
+    <visual>
+      <origin xyz="5.32907e-18 -0.0596 0" rpy="6.12323e-17 -1.2326e-32 6.12323e-17" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/right_wheel_link.stl" />
+      </geometry>
+      <material name="right_wheel_link_material">
+        <color rgba="0.176471 0.184314 0.196078 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin xyz="5.32907e-18 -0.0596 0" rpy="6.12323e-17 -1.2326e-32 6.12323e-17" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/right_wheel_link.stl" />
+      </geometry>
+    </collision> -->
+    <collision>
+      <origin xyz="0 -0.0596 0" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.103" length="0.05" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from base_link to right_wheel_link -->
+  <joint name="right_wheel_joint" type="continuous">
+    <origin xyz="-1.67962e-18 ${-wheel_separation / 2.0 + wheel_geometry_offset} -0.075" rpy="-6.12323e-17 1.90012e-29 -6.12323e-17" />
+    <parent link="base_link" />
+    <child link="right_wheel_link" />
+    <axis xyz="0 1 0" />
+    <limit effort="16.0" velocity="31.416" />
+  </joint>
+  <!-- Link left_caster_dummy_link -->
+  <link name="left_caster_dummy_link">
+    <inertial>
+      <origin xyz="0.0130786 -0.0218812 0.00272554" rpy="0 0 0" />
+      <mass value="0.748427" />
+      <inertia ixx="0.000772053" ixy="0.000172286" ixz="1.22792e-05" iyy="0.000786117"
+        iyz="3.58926e-05" izz="0.000715795" />
+    </inertial>
+    <!-- Part left_caster_dummy_link -->
+    <visual>
+      <origin xyz="0 0 0" rpy="-1.15765e-16 5.62061e-16 5.94075e-35" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/left_caster_dummy_link.stl" />
+      </geometry>
+      <material name="left_caster_dummy_link_material">
+        <color rgba="0.796078 0.823529 0.937255 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="-1.15765e-16 5.62061e-16 5.94075e-35" />
+      <!-- <geometry>
+        <mesh filename="package://aftr_description/meshes/left_caster_dummy_link.stl" />
+      </geometry> -->
+      <geometry>
+        <box size="0.03 0.03 0.03" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link left_caster_wheel_link -->
+  <link name="left_caster_wheel_link">
+    <inertial>
+      <origin xyz="0.0797828 -0.0893135 0.0757217" rpy="0 0 0" />
+      <mass value="0.453592" />
+      <inertia ixx="0.000313773" ixy="4.26373e-08" ixz="-4.34854e-05" iyy="0.000304713"
+        iyz="-2.04639e-07" izz="0.00051342" />
+    </inertial>
+    <!-- Part left_caster_wheel_link -->
+    <visual>
+      <origin xyz="0.04 -0.0205 0.069" rpy="-1.30034e-16 -8.34647e-19 0.00470589" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/left_caster_wheel_link.stl" />
+      </geometry>
+      <material name="left_caster_wheel_link_material">
+        <color rgba="0.796078 0.823529 0.937255 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin xyz="0.04 -0.0205 0.069" rpy="-1.30034e-16 -8.34647e-19 0.00470589" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/left_caster_wheel_link.stl" />
+      </geometry>
+    </collision> -->
+    <collision>
+      <origin xyz="0.04 -0.0205 0.069" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.05" length="0.02" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from left_caster_dummy_link to left_caster_wheel_link -->
+
+  <!-- [RViz2] left_caster_wheel_joint -->
+  <xacro:unless value="$(arg use_sim)">
+    <joint name="left_caster_wheel_joint" type="fixed">
+      <origin xyz="-0.039896 0.022188 -0.069" rpy="6.12423e-17 5.56088e-16 -0.00470589" />
+      <!-- <origin xyz="-0.039896 0.014188 -0.069" rpy="6.12423e-17 5.56088e-16 -0.00470589" /> -->
+      <parent link="left_caster_dummy_link" />
+      <child link="left_caster_wheel_link" />
+      <axis xyz="0 1 0" />
+    </joint>
+  </xacro:unless>
+  <!-- [Simulation] left_caster_wheel_joint -->
+  <xacro:if value="$(arg use_sim)">
+    <joint name="left_caster_wheel_joint" type="continuous">
+      <origin xyz="-0.039896 0.022188 -0.069" rpy="6.12423e-17 5.56088e-16 -0.00470589" />
+      <!-- <origin xyz="-0.039896 0.014188 -0.069" rpy="6.12423e-17 5.56088e-16 -0.00470589" /> -->
+      <parent link="left_caster_dummy_link" />
+      <child link="left_caster_wheel_link" />
+      <axis xyz="0 1 0" />
+      <limit effort="0.0" velocity="100.0" />
+      <dynamics damping="0.01" friction="0.01" />
+    </joint>
+  </xacro:if>
+
+  <!-- Joint from base_link to left_caster_dummy_link -->
+  <!-- [RViz2] left_caster_mount_joint -->
+  <xacro:unless value="$(arg use_sim)">
+    <joint name="left_caster_mount_joint" type="fixed">
+      <origin xyz="0.660239 0.193304 -0.05" rpy="8.35077e-17 -4.62115e-17 -1.73472e-18" />
+      <parent link="base_link" />
+      <child link="left_caster_dummy_link" />
+      <axis xyz="0 0 1" />
+    </joint>
+  </xacro:unless>
+
+  <!-- [Simulation] left_caster_mount_joint -->
+  <xacro:if value="$(arg use_sim)">
+    <joint name="left_caster_mount_joint" type="continuous">
+      <origin xyz="0.660239 0.193304 -0.05" rpy="8.35077e-17 -4.62115e-17 -1.73472e-18" />
+      <parent link="base_link" />
+      <child link="left_caster_dummy_link" />
+      <axis xyz="0 0 1" />
+      <limit effort="0.0" velocity="100.0" />
+      <dynamics damping="0.01" friction="0.01" />
+    </joint>
+  </xacro:if>
+
+
+  <!-- Link right_caster_dummy_link -->
+  <link name="right_caster_dummy_link">
+    <inertial>
+      <origin xyz="0.0130786 -0.0218812 0.00272554" rpy="0 0 0" />
+      <mass value="0.748427" />
+      <inertia ixx="0.000772053" ixy="0.000172286" ixz="1.22792e-05" iyy="0.000786117"
+        iyz="3.58926e-05" izz="0.000715795" />
+    </inertial>
+    <!-- Part right_caster_dummy_link -->
+    <visual>
+      <origin xyz="0 0 0" rpy="-1.15765e-16 5.62061e-16 -1.89706e-36" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/right_caster_dummy_link.stl" />
+      </geometry>
+      <material name="right_caster_dummy_link_material">
+        <color rgba="0.796078 0.823529 0.937255 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="-1.15765e-16 5.62061e-16 -1.89706e-36" />
+      <!-- <geometry>
+        <mesh filename="package://aftr_description/meshes/right_caster_dummy_link.stl" />
+      </geometry> -->
+      <geometry>
+        <box size="0.03 0.03 0.03" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Link right_caster_wheel_link -->
+  <link name="right_caster_wheel_link">
+    <inertial>
+      <origin xyz="0.0797828 -0.0893135 0.0757217" rpy="0 0 0" />
+      <mass value="0.453592" />
+      <inertia ixx="0.000313773" ixy="4.26373e-08" ixz="-4.34854e-05" iyy="0.000304713"
+        iyz="-2.04639e-07" izz="0.00051342" />
+    </inertial>
+    <!-- Part right_caster_wheel_link -->
+    <visual>
+      <origin xyz="0.04 -0.0205 0.069" rpy="-1.30034e-16 -8.34647e-19 0.00470589" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/right_caster_wheel_link.stl" />
+      </geometry>
+      <material name="right_caster_wheel_link_material">
+        <color rgba="0.796078 0.823529 0.937255 1" />
+      </material>
+    </visual>
+    <!-- <collision>
+      <origin xyz="0.04 -0.0205 0.069" rpy="-1.30034e-16 -8.34647e-19 0.00470589" />
+      <geometry>
+        <mesh filename="package://aftr_description/meshes/right_caster_wheel_link.stl" />
+      </geometry>
+    </collision> -->
+    <collision>
+      <origin xyz="0.04 -0.0205 0.069" rpy="1.5708 0 0" />
+      <geometry>
+        <cylinder radius="0.05" length="0.02" />
+      </geometry>
+    </collision>
+  </link>
+  <!-- Joint from right_caster_dummy_link to right_caster_wheel_link -->
+
+  <!-- [RViz2] right_caster_wheel_joint -->
+  <xacro:unless value="$(arg use_sim)">
+    <joint name="right_caster_wheel_joint" type="fixed">
+      <origin xyz="-0.039896 0.022188 -0.069" rpy="6.12412e-17 5.58053e-16 -0.00470589" />
+      <!-- <origin xyz="-0.039896 0.014188 -0.069" rpy="6.12412e-17 5.58053e-16 -0.00470589" /> -->
+      <parent link="right_caster_dummy_link" />
+      <child link="right_caster_wheel_link" />
+      <axis xyz="0 1 0" />
+    </joint>
+  </xacro:unless>
+
+  <!-- [Simulation] right_caster_wheel_joint -->
+  <xacro:if value="$(arg use_sim)">
+    <joint name="right_caster_wheel_joint" type="continuous">
+      <origin xyz="-0.039896 0.022188 -0.069" rpy="6.12412e-17 5.58053e-16 -0.00470589" />
+      <!-- <origin xyz="-0.039896 0.014188 -0.069" rpy="6.12412e-17 5.58053e-16 -0.00470589" /> -->
+      <parent link="right_caster_dummy_link" />
+      <child link="right_caster_wheel_link" />
+      <axis xyz="0 1 0" />
+      <limit effort="0.0" velocity="100.0" />
+      <dynamics damping="0.01" friction="0.01" />
+    </joint>
+  </xacro:if>
+
+  <!-- Joint from base_link to right_caster_dummy_link -->
+
+  <!-- [RViz2] right_caster_mount_joint -->
+  <xacro:unless value="$(arg use_sim)">
+    <joint name="right_caster_mount_joint" type="fixed">
+      <origin xyz="0.660239 -0.193304 -0.05" rpy="-3.89458e-21 -7.4959e-17 -1.73472e-18" />
+      <parent link="base_link" />
+      <child link="right_caster_dummy_link" />
+      <axis xyz="0 0 1" />
+    </joint>
+  </xacro:unless>
+
+  <!-- [Simulation] right_caster_mount_joint -->
+  <xacro:if value="$(arg use_sim)">
+    <joint name="right_caster_mount_joint" type="continuous">
+      <origin xyz="0.660239 -0.193304 -0.05" rpy="-3.89458e-21 -7.4959e-17 -1.73472e-18" />
+      <parent link="base_link" />
+      <child link="right_caster_dummy_link" />
+      <axis xyz="0 0 1" />
+      <limit effort="0.0" velocity="100.0" />
+      <dynamics damping="0.01" friction="0.01" />
+    </joint>
+  </xacro:if>
+
+
+  <!-- [Additional Frame] User Code Begin -->
+
+  <!-- base_footprint -->
+  <link name="base_footprint" />
+  <joint name="base_joint" type="fixed">
+    <origin xyz="0 0 0.178" rpy="0.0 0.0 0.0" />
+    <parent link="base_footprint" />
+    <child link="base_link" />
+  </joint>
+
+  <!-- lidar_link -->
+  <link name="laser" />
+  <joint name="lidar_joint" type="fixed">
+    <!-- Rotate the LiDAR frame to match its inverted physical mounting. -->
+    <origin xyz="0.64556667 0.0000405 0.0177" rpy="3.14159 0 3.14159" />
+    <parent link="base_link" />
+    <child link="laser" />
+  </joint>
+  <!-- [Additional Frame] User Code End -->
+
+
+  <!-- [ros2_control] User Code Begin -->
+  <ros2_control name="MDBotSystem" type="system">
+    <hardware>
+      <xacro:unless value="$(arg use_sim)">
+        <plugin>mdbot_hardware/MDHardwareInterface</plugin>
+        <param name="port">/dev/ttyMotor</param>
+        <param name="baudrate">115200</param>
+      </xacro:unless>
+
+      <xacro:if value="$(arg use_sim)">
+        <plugin>gazebo_ros2_control/GazeboSystem</plugin>
+      </xacro:if>
+    </hardware>
+
+    <joint name="left_wheel_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+
+    <joint name="right_wheel_joint">
+      <command_interface name="velocity" />
+      <state_interface name="position" />
+      <state_interface name="velocity" />
+    </joint>
+  </ros2_control>
+  <!-- [ros2_control] User Code End -->
+
+  <!-- [Gazebo] User Code Begin -->
+  <xacro:if value="$(arg use_sim)">
+
+    <gazebo reference="right_caster_wheel_link">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+    </gazebo>
+
+    <gazebo reference="left_caster_wheel_link">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <kp>1000000.0</kp>
+      <kd>100.0</kd>
+      <minDepth>0.001</minDepth>
+    </gazebo>
+
+    <gazebo reference="left_wheel_link">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+    </gazebo>
+    <gazebo reference="right_wheel_link">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+    </gazebo>
+
+    <gazebo>
+      <plugin name="gazebo_ros2_control" filename="libgazebo_ros2_control.so">
+        <parameters>$(find aftr_bringup)/config/md_controllers.yaml</parameters>
+      </plugin>
+    </gazebo>
+
+    <gazebo reference="laser">
+      <sensor type="ray" name="sllidar_sensor">
+        <pose>0 0 0 0 0 0</pose>
+        <visualize>true</visualize>
+        <update_rate>10</update_rate>
+        <ray>
+          <scan>
+            <horizontal>
+              <samples>3000</samples>
+              <resolution>1</resolution>
+              <min_angle>-3.14159</min_angle>
+              <max_angle>3.14159</max_angle>
+            </horizontal>
+          </scan>
+          <range>
+            <min>0.05</min>
+            <max>30.0</max>
+          </range>
+        </ray>
+        <plugin name="gazebo_ros_ray_sensor" filename="libgazebo_ros_ray_sensor.so">
+          <ros>
+            <remapping>~/out:=scan</remapping>
+          </ros>
+          <output_type>sensor_msgs/LaserScan</output_type>
+          <frame_name>laser</frame_name>
+        </plugin>
+      </sensor>
+    </gazebo>
+
+    <gazebo>
+      <plugin name="gazebo_ros_joint_state_publisher"
+        filename="libgazebo_ros_joint_state_publisher.so">
+        <ros>
+          <remapping>~/out:=joint_states</remapping>
+        </ros>
+        <update_rate>50</update_rate>
+        <joint_name>right_caster_wheel_joint</joint_name>
+        <joint_name>right_caster_mount_joint</joint_name>
+        <joint_name>left_caster_wheel_joint</joint_name>
+        <joint_name>left_caster_mount_joint</joint_name>
+      </plugin>
+    </gazebo>
+  </xacro:if>
+
+  <!-- [Gazebo] User Code End -->
+</robot>

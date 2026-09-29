@@ -1,0 +1,9 @@
+<library path="mdbot_hardware">
+  <class name="mdbot_hardware/MDHardwareInterface"
+    type="mdbot_hardware::MDHardwareInterface"
+    base_class_type="hardware_interface::SystemInterface">
+    <description>
+      MD400T Motor Driver Hardware Interface for ros2_control
+    </description>
+  </class>
+</library>

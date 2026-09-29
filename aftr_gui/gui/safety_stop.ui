@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>SafetyStopPage</class>
+ <widget class="QWidget" name="page_safety_stop">
+  <property name="styleSheet">
+   <string notr="true">QWidget#page_safety_stop { background:#FFFFFF; }
+QFrame#safety_image_card { background:#111827; border:2px solid #374151; border-radius:18px; }
+QFrame#safety_info_card { background:#FFF7ED; border:3px solid #DC2626; border-radius:18px; }
+QLabel#label_safety_badge { background:#FEE2E2; color:#991B1B; border:1px solid #F87171; border-radius:10px; padding:10px 16px; font-size:16pt; font-weight:900; }
+QLabel#label_safety_title { color:#7F1D1D; font-size:30pt; font-weight:900; }
+QLabel#label_safety_message { color:#7F1D1D; font-size:20pt; font-weight:700; }
+QLabel#label_safety_detail { background:#FFFFFF; color:#111827; border:1px solid #FED7AA; border-radius:12px; padding:18px; font-size:16pt; font-weight:700; }
+QLabel#label_safety_image { color:#E5E7EB; font-size:18pt; font-weight:700; padding:20px; }
+QPushButton#btn_clear_safety_stop { min-height:96px; background:#B91C1C; color:#FFFFFF; border:3px solid #7F1D1D; border-radius:16px; padding:16px 22px; font-size:22pt; font-weight:900; }
+QPushButton#btn_clear_safety_stop:pressed { background:#7F1D1D; border-color:#450A0A; padding-top:20px; padding-bottom:12px; }
+QPushButton#btn_clear_safety_stop:disabled { background:#9CA3AF; color:#F3F4F6; border-color:#6B7280; }</string>
+  </property>
+  <layout class="QHBoxLayout" name="safetyRootLayout" stretch="3,2">
+   <property name="spacing"><number>28</number></property>
+   <property name="leftMargin"><number>30</number></property>
+   <property name="topMargin"><number>24</number></property>
+   <property name="rightMargin"><number>30</number></property>
+   <property name="bottomMargin"><number>24</number></property>
+   <item>
+    <widget class="QFrame" name="safety_image_card">
+     <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+     <layout class="QVBoxLayout" name="safetyImageLayout">
+      <property name="leftMargin"><number>18</number></property>
+      <property name="topMargin"><number>18</number></property>
+      <property name="rightMargin"><number>18</number></property>
+      <property name="bottomMargin"><number>18</number></property>
+      <item>
+       <widget class="QLabel" name="label_safety_image">
+        <property name="minimumSize"><size><width>520</width><height>390</height></size></property>
+        <property name="text"><string>감지 스냅샷을 준비하고 있습니다.</string></property>
+        <property name="alignment"><set>Qt::AlignCenter</set></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QFrame" name="safety_info_card">
+     <property name="frameShape"><enum>QFrame::StyledPanel</enum></property>
+     <layout class="QVBoxLayout" name="safetyInfoLayout">
+      <property name="spacing"><number>18</number></property>
+      <property name="leftMargin"><number>26</number></property>
+      <property name="topMargin"><number>26</number></property>
+      <property name="rightMargin"><number>26</number></property>
+      <property name="bottomMargin"><number>26</number></property>
+      <item>
+       <widget class="QLabel" name="label_safety_badge">
+        <property name="maximumSize"><size><width>210</width><height>16777215</height></size></property>
+        <property name="text"><string>SAFETY STOP</string></property>
+        <property name="alignment"><set>Qt::AlignCenter</set></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_safety_title">
+        <property name="text"><string>작업자 쓰러짐이 감지되었습니다</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_safety_message">
+        <property name="text"><string>로봇이 안전 정지되었습니다.&#10;작업자와 주변 환경을 직접 확인해 주세요.</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_safety_detail">
+        <property name="text"><string>로봇 상태를 확인하고 있습니다.</string></property>
+        <property name="wordWrap"><bool>true</bool></property>
+       </widget>
+      </item>
+      <item><spacer name="safetyVerticalSpacer"><property name="orientation"><enum>Qt::Vertical</enum></property><property name="sizeHint" stdset="0"><size><width>20</width><height>40</height></size></property></spacer></item>
+      <item>
+       <widget class="QPushButton" name="btn_clear_safety_stop">
+        <property name="text"><string>안전 정지 해제</string></property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

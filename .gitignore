@@ -1,0 +1,31 @@
+# Editor and temporary files
+*.swp
+*.bak
+.vscode/
+.idea/
+.project
+.pydevproject
+
+# Colcon output (workspace-root outputs are outside this repository)
+build/
+install/
+log/
+build_*/
+install_*/
+log_*/
+
+# Python caches and local environments
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.venv/
+venv/
+
+# Local configuration and generated inference output
+.env
+.env.*
+!.env.example
+*.pt
+*.engine
+runs/

@@ -1,0 +1,10 @@
+.git
+build/
+install/
+log/
+build_*/
+install_*/
+log_*/
+.pytest_cache/
+**/__pycache__/
+*.pyc
