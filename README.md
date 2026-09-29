@@ -54,6 +54,8 @@ Container의 `/workspace`에서 Workspace를 빌드합니다. 첫 빌드 직후 
 source /workspace/install_laptop/setup.bash
 ```
 
+실행 script는 Host Workspace의 `models/`를 Container `/models`에 읽기 전용으로, `data/`를 `/data`에 읽기·쓰기용으로 연결합니다. 모델은 `models/fall_detection/yolov8n-pose.pt`에 준비하세요. 상세 경로와 override는 [Laptop Docker Development](docs/development/laptop-docker.md)를 참고하세요.
+
 상세 Build, Test 및 troubleshooting은 [Laptop Docker Development](docs/development/laptop-docker.md)를 참고하세요.
 
 ## Development Environment

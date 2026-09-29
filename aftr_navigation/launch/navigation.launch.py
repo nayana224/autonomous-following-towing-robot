@@ -11,7 +11,7 @@ def generate_launch_description():
     pkg_nav2 = get_package_share_directory("nav2_bringup")
     pkg_aftr_nav = get_package_share_directory("aftr_navigation")
 
-    map_file = os.path.expanduser("~/map/mdbot_map.yaml")
+    map_file = "/data/maps/mdbot_map.yaml"
     params_file = os.path.join(pkg_aftr_nav, "config", "nav2_params.yaml")
 
     nav2_bringup_launch = IncludeLaunchDescription(

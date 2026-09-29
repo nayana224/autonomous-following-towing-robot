@@ -3,7 +3,7 @@ fall_detection:
     image_topic: "/camera/camera/color/image_raw"
 
     model_path: >-
-      /home/mechatukka/inpyo_ws/mdbot_models/fall_detection/yolov8n-pose.pt
+      /models/fall_detection/yolov8n-pose.pt
 
     device: "cuda:0"
     confidence: 0.35

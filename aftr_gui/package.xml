@@ -4,7 +4,7 @@
   <name>aftr_gui</name>
   <version>0.2.0</version>
   <description>Operator GUI and integrated fall-safety launch for Autonomous Following and Towing Robot.</description>
-  <maintainer email="pyo@todo.com">pyo</maintainer>
+  <maintainer email="inpyoi1304@gmail.com">pyo</maintainer>
   <license>Apache License 2.0</license>
 
   <depend>geometry_msgs</depend>

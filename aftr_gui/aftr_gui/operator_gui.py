@@ -39,6 +39,9 @@ from aftr_gui.status_parser import parse_allowed_commands
 from aftr_gui.status_parser import parse_status_payload
 from aftr_gui.teleop_mapper import TeleopConfig
 from aftr_gui.teleop_mapper import map_joystick_to_cmd
+from aftr_gui.views.responsive_dashboard import ResponsiveDashboardMixin
+from aftr_gui.views.safety_dashboard import SafetyDashboardMixin
+
 ACTIVE_MAIN_WINDOW = None
 
 
@@ -51,7 +54,7 @@ def close_active_window_on_sigint(_signum, _frame):
 class RobotDashboard(QMainWindow):
     """Main operator dashboard window."""
 
-    def __init__(self, window_title="MDBOT 운영 화면"):
+    def __init__(self, window_title="MDBOT 운영 화면", client_factory=ModeManagerClient):
         super().__init__()
 
         self.share_dir = get_package_share_directory("aftr_gui")
@@ -59,7 +62,7 @@ class RobotDashboard(QMainWindow):
         uic.loadUi(ui_path, self)
         self.setWindowTitle(window_title)
 
-        self.mode_manager_client = ModeManagerClient()
+        self.mode_manager_client = client_factory()
         self.active_command_worker = None
 
         self.joystick_x_axis = 0.0
@@ -597,6 +600,10 @@ class RobotDashboard(QMainWindow):
         super().closeEvent(event)
 
 
+class OperatorDashboard(ResponsiveDashboardMixin, SafetyDashboardMixin, RobotDashboard):
+    """Production operator window with responsive safety controls."""
+
+
 def main(args=None):
     """Run the Qt application and connect it to the ROS bridge."""
     global ACTIVE_MAIN_WINDOW
@@ -604,10 +611,10 @@ def main(args=None):
     window = None
     try:
         app = QApplication(sys.argv if args is None else args)
-        window = RobotDashboard()
+        window = OperatorDashboard()
         ACTIVE_MAIN_WINDOW = window
         signal.signal(signal.SIGINT, close_active_window_on_sigint)
-        window.show()
+        window.show_for_available_screen()
         return app.exec_()
     except KeyboardInterrupt:
         return 0

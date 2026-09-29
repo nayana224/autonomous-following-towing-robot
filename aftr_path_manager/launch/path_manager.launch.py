@@ -1,8 +1,6 @@
 # Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
 """Launch the AFTR path manager."""
 
-import os
-
 from launch import LaunchDescription
 from launch_ros.actions import Node
 
@@ -19,15 +17,11 @@ def generate_launch_description():
                 # Start recording only after the mode manager calls /path_manager/start_record.
                 # Localization bringup must not restart CSV recording.
                 "auto_start": False,
-                "csv_file": os.path.expanduser("~/recorded_path.csv"),
-                "safe_csv_file": os.path.expanduser("~/safe_path.csv"),
+                "csv_file": "/data/paths/recorded_path.csv",
+                "safe_csv_file": "/data/paths/safe_path.csv",
                 "safe_path_generator_timeout_sec": 60.0,
-                "corner_turn_output_csv": os.path.expanduser(
-                    "~/corner_turn_path.csv"
-                ),
-                "corner_turn_map_yaml": os.path.expanduser(
-                    "~/map/mdbot_map.yaml"
-                ),
+                "corner_turn_output_csv": "/data/paths/corner_turn_path.csv",
+                "corner_turn_map_yaml": "/data/maps/mdbot_map.yaml",
                 "corner_turn_generator_timeout_sec": 30.0,
                 "global_frame": "map",
                 "odom_frame": "odom",

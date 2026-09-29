@@ -23,9 +23,9 @@ class SafePathGeneratorNode(Node):
         """Declare path and map parameters before running the generator."""
         super().__init__("safe_path_generator_dynamic_cleanup_node")
 
-        self.declare_parameter("map_yaml_path", "/home/jaebeom/map/mdbot_map.yaml")
-        self.declare_parameter("raw_path_csv_path", "/home/jaebeom/recorded_path.csv")
-        self.declare_parameter("safe_path_csv_path", "/home/jaebeom/safe_path.csv")
+        self.declare_parameter("map_yaml_path", "/data/maps/mdbot_map.yaml")
+        self.declare_parameter("raw_path_csv_path", "/data/paths/recorded_path.csv")
+        self.declare_parameter("safe_path_csv_path", "/data/paths/safe_path.csv")
 
         self.declare_parameter("frame_id", "map")
 

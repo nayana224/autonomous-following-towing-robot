@@ -93,7 +93,7 @@ class FallDetectionNode(Node):
         self.declare_parameter("image_topic", "/camera/camera/color/image_raw")
         self.declare_parameter(
             "model_path",
-            "/home/mechatukka/inpyo_ws/mdbot_models/fall_detection/yolov8n-pose.pt",
+            "/models/fall_detection/yolov8n-pose.pt",
         )
         self.declare_parameter("device", "cuda:0")
         self.declare_parameter("confidence", 0.35)

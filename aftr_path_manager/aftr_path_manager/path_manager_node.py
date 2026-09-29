@@ -80,11 +80,11 @@ class PathManagerNode(Node):
         """Declare ROS parameters used by recording and replay workflows."""
         self.csv_file = self.declare_parameter(
             "csv_file",
-            os.path.expanduser("~/recorded_path.csv"),
+            "/data/paths/recorded_path.csv",
         ).value
         self.safe_csv_file = self.declare_parameter(
             "safe_csv_file",
-            os.path.expanduser("~/safe_path.csv"),
+            "/data/paths/safe_path.csv",
         ).value
         self.safe_path_generator_timeout_sec = self.declare_parameter(
             "safe_path_generator_timeout_sec",
@@ -92,11 +92,11 @@ class PathManagerNode(Node):
         ).value
         self.corner_turn_output_csv = self.declare_parameter(
             "corner_turn_output_csv",
-            os.path.expanduser("~/corner_turn_path.csv"),
+            "/data/paths/corner_turn_path.csv",
         ).value
         self.corner_turn_map_yaml = self.declare_parameter(
             "corner_turn_map_yaml",
-            os.path.expanduser("~/map/mdbot_map.yaml"),
+            "/data/maps/mdbot_map.yaml",
         ).value
         self.corner_turn_generator_timeout_sec = self.declare_parameter(
             "corner_turn_generator_timeout_sec",
@@ -104,7 +104,7 @@ class PathManagerNode(Node):
         ).value
         self.pose_file = self.declare_parameter(
             "pose_file",
-            os.path.expanduser("~/last_pose/last_pose.yaml"),
+            "/data/poses/last_pose.yaml",
         ).value
         self.global_frame = self.declare_parameter("global_frame", "map").value
         self.odom_frame = self.declare_parameter("odom_frame", "odom").value

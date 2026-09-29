@@ -27,8 +27,8 @@ class MapCornerTurnPathGeneratorNode(Node):
         self.get_logger().info(f"실행 코드 버전             : {NODE_VERSION}")
 
         # 1. CSV file / optional ROS publish parameters
-        self.declare_parameter("input_csv_path", "/home/jaebeom/safe_path.csv")
-        self.declare_parameter("output_csv_path", "/home/jaebeom/corner_turn_path.csv")
+        self.declare_parameter("input_csv_path", "/data/paths/safe_path.csv")
+        self.declare_parameter("output_csv_path", "/data/paths/corner_turn_path.csv")
         self.declare_parameter("output_frame_id", "map")
 
         self.declare_parameter("publish_output_path", True)
@@ -90,7 +90,7 @@ class MapCornerTurnPathGeneratorNode(Node):
 
         # 5. Map-based safety check
         self.declare_parameter("use_map_safety_check", True)
-        self.declare_parameter("map_yaml_path", "/home/jaebeom/map/mdbot_map.yaml")
+        self.declare_parameter("map_yaml_path", "/data/maps/mdbot_map.yaml")
         self.declare_parameter("robot_radius", 0.35)
         self.declare_parameter("safety_margin", 0.15)
         self.declare_parameter("treat_unknown_as_obstacle", True)

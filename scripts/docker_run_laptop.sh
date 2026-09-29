@@ -21,6 +21,18 @@ if (( $# == 0 )); then
   set -- bash
 fi
 
+models_dir="${AFTR_MODELS_DIR:-$workspace_root/models}"
+data_dir="${AFTR_DATA_DIR:-$workspace_root/data}"
+if [[ "$models_dir" != /* || "$data_dir" != /* ]]; then
+  echo "AFTR_MODELS_DIR and AFTR_DATA_DIR must be absolute paths." >&2
+  exit 2
+fi
+mkdir -p "$models_dir" "$data_dir/paths" "$data_dir/maps" "$data_dir/poses"
+if [[ ! -r "$models_dir" || ! -w "$data_dir" || ! -w "$data_dir/paths" || ! -w "$data_dir/maps" || ! -w "$data_dir/poses" ]]; then
+  echo "Model directory must be readable and data directories must be writable by the host user." >&2
+  exit 2
+fi
+
 host_uid="$(id -u)"
 host_gid="$(id -g)"
 docker_flags=(--rm --init --interactive --platform linux/amd64)
@@ -34,6 +46,8 @@ docker_flags+=(
   --env CUDA_VISIBLE_DEVICES=
   --env SDL_AUDIODRIVER=dummy
   --volume "$workspace_root:/workspace"
+  --volume "$models_dir:/models:ro"
+  --volume "$data_dir:/data:rw"
   --workdir /workspace
 )
 

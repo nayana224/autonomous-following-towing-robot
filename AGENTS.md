@@ -53,10 +53,12 @@ The commands below describe the existing manual `build/install/log` layout. For 
 - Keep CUDA, TensorRT, NVIDIA Container Runtime, Jetson.GPIO, and Jetson-specific packages out of the laptop image and shared dependency lists.
 - Keep common dependencies architecture-neutral where possible; isolate future Jetson dependencies.
 - Hardware-dependent tests are not required for laptop CI. Do not run the default operator-system or motor bringup launch in laptop validation.
-- Do not hard-code new device, model, or runtime-data paths; pass them through ROS configuration and mounted volumes.
+- Use `/models` for read-only model files and `/data` for writable paths, maps, and poses. Do not add personal `/home/...` defaults; keep ROS parameters available for overrides.
 - Never share colcon build, install, or log outputs between amd64 and arm64 environments. Laptop Docker uses `build_laptop/`, `install_laptop/`, and `log_laptop/`; keep these separate from host or future Jetson outputs.
 - Update `docs/development/laptop-docker.md` when Docker scripts, dependency versions, Workspace paths, or validation commands change; keep a short summary in `README.md`.
 - Docker changes must preserve ROS runtime interfaces and hardware-sensitive behavior.
+- The production GUI entry point is `aftr_gui.operator_gui:main`; preserve safety-stop rendering, release confirmation, snapshot handling, and mode-manager ownership of automatic base startup.
+- Do not refactor `aftr_tracking`, `aftr_fall_detection`, `aftr_status_led`, or `aftr_path_manager` source outside explicit scope; path-only portability edits are the current exception.
 
 ## Documentation Rules
 

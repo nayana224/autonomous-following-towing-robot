@@ -22,13 +22,13 @@ setup(
     install_requires=["setuptools"],
     zip_safe=True,
     maintainer="pyo",
-    maintainer_email="pyo@todo.com",
+    maintainer_email="inpyoi1304@gmail.com",
     description="Operator GUI for Autonomous Following and Towing Robot mode manager services.",
     license="Apache License 2.0",
     extras_require={"test": ["pytest"]},
     entry_points={
         "console_scripts": [
-            "operator_gui = aftr_gui.refactored_operator_gui:main",
+            "operator_gui = aftr_gui.operator_gui:main",
         ],
     },
 )

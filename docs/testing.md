@@ -28,6 +28,12 @@ The four failures are existing lint/docstring checks: `aftr_path_manager` (2), `
 
 Laptop CI excludes physical motor, LiDAR, RealSense, GPIO, GPU inference, and the default operator-system hardware launch. Those checks belong to Jetson integration. This baseline records the Phase 1 run; rerun the commands above for current results.
 
+## Current Laptop validation
+
+The cleanup and path migration were validated in Laptop Docker after the Phase 1 baseline. All 16 Workspace packages built. `colcon list` found 13 `aftr_*` packages and the three external packages. The production GUI loaded offscreen with its safety page, map and joystick widgets, status rendering, release confirmation dialog, and close path. The `/models` mount was readable and read-only; `/data/{paths,maps,poses}` was writable by the Host UID/GID. PyTorch still reported `torch.version.cuda is None` and `torch.cuda.is_available() is False`. The model file was absent, so inference was not run. Physical robot and X11 GUI behavior remain for device validation.
+
+The current test run reported **97 tests, 0 errors, 5 failures, 4 skipped**. The failures are existing lint/docstring checks in `aftr_mode_manager` (1), `aftr_path_manager` (2), `aftr_status_led` (1), and `aftr_tracking` (1). They concern unchanged logic or files outside this path-only scope. This result is distinct from the historical Phase 1 result above.
+
 The following sections retain the existing manual and robot-hardware validation checklist. They are separate from the Laptop CPU Docker commands above.
 
 ## Build

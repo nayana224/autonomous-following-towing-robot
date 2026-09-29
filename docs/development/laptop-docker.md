@@ -27,6 +27,11 @@ Linux amd64 Host → Docker → Ubuntu 22.04 Jammy → ROS 2 Humble → CPU-only
 │   ├── laser_filters/
 │   ├── serial-ros2/
 │   └── sllidar_ros2/
+├── models/fall_detection/yolov8n-pose.pt
+├── data/
+│   ├── paths/
+│   ├── maps/
+│   └── poses/
 ├── build_laptop/
 ├── install_laptop/
 └── log_laptop/
@@ -59,6 +64,23 @@ cd ~/autonomous_following_towing_robot_ws/src/autonomous-following-towing-robot
 ```
 
 명령을 전달하면 shell 대신 해당 명령을 실행합니다. `--headless`는 명령보다 앞에 둡니다.
+
+### Model과 runtime data mount
+
+실행 script는 기본적으로 Workspace `models/`를 `/models:ro`로, `data/`를 `/data:rw`로 bind mount합니다. `models/`와 `data/{paths,maps,poses}/`가 없으면 Host 사용자 권한으로 만듭니다. 모델 파일 자체는 제공하지 않습니다. 모델의 기본 위치는 Host `models/fall_detection/yolov8n-pose.pt` → Container `/models/fall_detection/yolov8n-pose.pt`입니다. 해당 파일이 없으면 실제 Fall Detection inference는 실행할 수 없습니다.
+
+별도 Host 저장소를 사용할 때는 **절대경로**를 지정합니다.
+
+```bash
+AFTR_MODELS_DIR=/absolute/path/to/models AFTR_DATA_DIR=/absolute/path/to/data ./scripts/docker_run_laptop.sh
+```
+
+`/data/paths`에는 `recorded_path.csv`, `safe_path.csv`, `corner_turn_path.csv`가, `/data/maps`에는 `mdbot_map.yaml`과 `mdbot_map.pgm`이, `/data/poses`에는 `last_pose.yaml`이 저장됩니다. Map saver의 prefix는 `/data/maps/mdbot_map`이며 YAML의 `image: mdbot_map.pgm` 상대 참조를 유지합니다. 이 이름은 runtime data contract입니다. `/data`와 하위 디렉터리는 Host UID/GID로 쓰기 가능해야 합니다. Script는 시작 전에 권한을 확인합니다. Docker 내에서도 같은 UID/GID로 실행되어 파일 소유권이 Host 사용자에게 남습니다.
+
+```bash
+./scripts/docker_run_laptop.sh --headless bash -lc 'id; test -r /models; test -w /data/paths; test -w /data/maps; test -w /data/poses'
+```
+
 
 ### Container 사용자와 파일 소유권
 
@@ -156,7 +178,7 @@ Build와 overlay source 이후 import를 검사합니다.
 python3 -c 'import cv2, numpy, torch, cv_bridge, ultralytics; from aftr_fall_detection import fall_detection_node; print("fall detection import: PASS")'
 ```
 
-Phase 1에서 import와 CUDA 부재 시 `cpu` 선택 경로가 통과했습니다. 실제 model file은 Container에서 사용할 수 없어 영상 추론을 검증하지 않았습니다. 현재 model 기본값은 이전 사용자 홈의 절대경로에 묶여 있으며, 이는 추후 ROS parameter와 model volume으로 분리할 대상입니다.
+Phase 1에서 import와 CUDA 부재 시 `cpu` 선택 경로가 통과했습니다. 현재 기본 `model_path`는 `/models/fall_detection/yolov8n-pose.pt`이며 ROS parameter로 override할 수 있습니다. 실제 model file이 없으면 영상 추론을 실행하지 않습니다.
 
 ## 12. rosdep
 
@@ -177,8 +199,8 @@ Phase 1 검증 결과와 기존 lint 실패 내역은 [Testing](../testing.md)�
 
 ## 14. Known Limitations
 
-- Fall Detection model 경로가 `/home/mechatukka/...`에 고정되어 있고 실제 inference는 미검증입니다.
-- 일부 path 생성 코드의 CSV·map 기본값은 `/home/jaebeom/...`에 묶여 있습니다. `~/map`, `~/last_pose` 등은 Container 사용자 홈에서 다른 위치가 됩니다.
+- 실제 Fall Detection model 파일이 제공되지 않아 inference는 미검증입니다. 기본 model path는 `/models/fall_detection/yolov8n-pose.pt`입니다.
+- Robot에서 `/models`와 `/data` mount 및 기존 데이터 이관은 별도로 확인해야 합니다.
 - 기존 lint/docstring 실패 4개가 남아 있습니다.
 - 실제 motor, LiDAR, RealSense, GPIO, GPU inference 및 전체 operator hardware Launch는 이 환경에서 검증하지 않았습니다.
 - GUI launch의 Ctrl-C 종료 후 RViz2가 exit code -11로 끝났습니다. 실행 중 GUI 창과 OpenGL 초기화는 확인했지만 종료 시 segfault 원인은 아직 조사하지 않았습니다.

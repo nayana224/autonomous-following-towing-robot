@@ -138,7 +138,7 @@ class ModeManagerNode(
         self.map_save_file = os.path.expanduser(
             self.declare_parameter(
                 "map_save_file",
-                "~/map/mdbot_map",
+                "/data/maps/mdbot_map",
             ).value
         )
         default_rviz_config_file = os.path.join(

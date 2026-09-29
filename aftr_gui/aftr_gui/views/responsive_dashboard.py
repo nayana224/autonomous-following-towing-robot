@@ -1,18 +1,11 @@
 # Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
-"""Single-point responsive layout and window policy for the AFTR operator GUI."""
-
-import signal
-import sys
-import traceback
+"""Responsive layout and window policy for the operator dashboard."""
 
 from PyQt5.QtCore import QTimer, Qt
 from PyQt5.QtWidgets import QApplication, QSizePolicy
 
-from aftr_gui import operator_gui
-from aftr_gui.safety_operator_gui import SafetyRobotDashboard
 
-
-class RefactoredOperatorDashboard(SafetyRobotDashboard):
+class ResponsiveDashboardMixin:
     """Own all responsive layout, styling, and window sizing in one class."""
 
     DESIGN_WIDTH = 1256
@@ -289,29 +282,3 @@ class RefactoredOperatorDashboard(SafetyRobotDashboard):
         frame = self.frameGeometry()
         frame.moveCenter(available.center())
         self.move(frame.topLeft())
-
-
-def main(args=None):
-    """Run the refactored safety-aware operator GUI."""
-    global_window = None
-    try:
-        app = QApplication(sys.argv if args is None else args)
-        global_window = RefactoredOperatorDashboard()
-        operator_gui.ACTIVE_MAIN_WINDOW = global_window
-        signal.signal(signal.SIGINT, operator_gui.close_active_window_on_sigint)
-        global_window.show_for_available_screen()
-        return app.exec_()
-    except KeyboardInterrupt:
-        return 0
-    except Exception as exc:
-        print(f"refactored operator GUI crashed: {exc}", file=sys.stderr)
-        traceback.print_exc()
-        return 1
-    finally:
-        operator_gui.ACTIVE_MAIN_WINDOW = None
-        if global_window is not None and global_window.isVisible():
-            global_window.close()
-
-
-if __name__ == "__main__":
-    sys.exit(main())
