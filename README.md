@@ -67,9 +67,7 @@ cd ~/260929_ws/src/autonomous-following-towing-robot
 source /workspace/install_jetson/setup.bash
 ```
 
-Jetson image는 CUDA PyTorch와 ROS 2 Humble을 사용합니다. 동일한 `/models:ro`, `/data:rw` 경로를 사용하며, `build_jetson/install_jetson/log_jetson`은 Laptop 산출물과 분리합니다. 준비 사항과 hardware 전달 방법은 [Jetson Docker Development](docs/development/jetson-docker.md)를 참고하세요.
-
-상세 Build, Test 및 troubleshooting은 [Laptop Docker Development](docs/development/laptop-docker.md)를 참고하세요.
+Jetson image는 CUDA PyTorch와 ROS 2 Humble을 사용합니다. 동일한 `/models:ro`, `/data:rw` 경로를 사용하며, `build_jetson/install_jetson/log_jetson`은 Laptop 산출물과 분리합니다. 실제 로봇 시연은 [시연·운영 안내](docs/operation.md), 개발 환경과 장치 전달 방법은 [Jetson Docker 안내](docs/development/jetson-docker.md)를 참고하세요.
 
 ## Development Environment
 
@@ -79,7 +77,7 @@ Jetson image는 CUDA PyTorch와 ROS 2 Humble을 사용합니다. 동일한 `/mod
 
 ### Jetson Orin Nano
 
-NVIDIA Jetson Orin Nano Super는 실제 Robot deployment 대상입니다. Ubuntu 22.04, L4T 36.5.2, CUDA 12.6 Host에서 NVIDIA Container Runtime을 사용합니다. Jetson Docker image에서 CUDA tensor 연산, Python 3.10/ROS Humble 및 16개 Workspace package Build를 확인했습니다. RealSense 촬영, motor/LiDAR 통신, GPIO 출력과 GUI 표시는 별도 hardware 검증이 필요합니다.
+NVIDIA Jetson Orin Nano Super는 실제 Robot deployment 대상입니다. Ubuntu 22.04, L4T 36.5.2, CUDA 12.6 Host에서 NVIDIA Container Runtime을 사용합니다. Jetson에서 CUDA 추론, 16개 Workspace package Build, RealSense 영상, LiDAR scan, X11 GUI 표시와 HDMI 안내음 재생을 확인했습니다. 운영자는 전체 시스템이 현장에서 정상 동작한다고 확인했습니다. 제출용 구동 로그와 장시간 안정성 기록은 [검증 현황](docs/testing.md)의 남은 항목으로 관리합니다.
 
 ## Packages
 
@@ -120,12 +118,8 @@ NVIDIA Jetson Orin Nano Super는 실제 Robot deployment 대상입니다. Ubuntu
 
 ## Documentation
 
-- [Laptop Docker Development](docs/development/laptop-docker.md)
-- [Jetson Docker Development](docs/development/jetson-docker.md)
-- [Setup](docs/setup.md)
-- [Architecture](docs/architecture.md)
-- [Operation](docs/operation.md)
-- [ROS Interfaces](docs/interfaces.md)
-- [Safety](docs/safety.md)
-- [Testing](docs/testing.md)
-- [개발 규칙](AGENTS.md)
+- 대회 시연: [시연·운영 안내](docs/operation.md), [검증 현황](docs/testing.md)
+- 시스템 설계: [아키텍처](docs/architecture.md), [ROS 인터페이스](docs/interfaces.md), [안전 정책](docs/safety.md)
+- 개발 환경: [Jetson Docker](docs/development/jetson-docker.md), [Laptop Docker](docs/development/laptop-docker.md)
+- 근거 자료: [하드웨어 매뉴얼과 발표 자료](docs/references/README.md)
+- 협업 규칙: [AGENTS.md](AGENTS.md)

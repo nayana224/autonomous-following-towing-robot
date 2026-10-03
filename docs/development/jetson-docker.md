@@ -48,7 +48,7 @@ Host udev rule이 만든 `/dev/ttyMotor`와 `/dev/ttyLidar` alias를 Container �
 
 NVIDIA [Jetson.GPIO Container 안내](https://github.com/NVIDIA/jetson-gpio#using-the-jetson-gpio-library-from-a-docker-container)에 맞춰 `JETSON_MODEL_NAME=JETSON_ORIN_NANO`와 GPIO chip device를 전달합니다. 실제 LED GPIO 사용에는 Host의 chip 접근 권한과 올바른 pinmux 설정이 필요합니다. Container 안의 import 성공만으로 물리 LED 동작이 입증되지는 않습니다.
 
-사용 가능한 local `DISPLAY`, X11/XWayland socket, 읽을 수 있는 `XAUTHORITY`가 있으면 Qt `xcb`와 Host display를 사용합니다. 없으면 자동으로 headless로 전환합니다. `--headless`는 Qt offscreen 및 SDL dummy audio를 명시합니다. 기본 hardware mode에서는 SDL audio를 dummy로 강제하지 않으며, 존재하는 ALSA 장치를 전달합니다. 실제 GUI rendering 및 speaker playback은 아직 검증되지 않았습니다.
+사용 가능한 local `DISPLAY`, X11/XWayland socket, 읽을 수 있는 `XAUTHORITY`가 있으면 Qt `xcb`와 Host display를 사용합니다. 없으면 자동으로 headless로 전환합니다. `--headless`는 Qt offscreen 및 SDL dummy audio를 명시합니다. GUI mode에서는 Host PulseAudio socket과 읽기 전용 인증 cookie를 Container에 전달하고 SDL `pulseaudio` 드라이버를 사용합니다. PulseAudio socket이 없으면 기존 ALSA 장치 접근을 시도합니다. 2026-10-03 X11에서 operator GUI 창을 확인했고 HDMI speaker에서 `system_ready.wav` 시험 재생을 들었습니다. 화면 조작 전체와 운영 중 모든 audio event는 아직 검증되지 않았습니다.
 
 ```bash
 ./scripts/docker_run_jetson.sh --headless
@@ -78,16 +78,36 @@ colcon --log-base log_jetson test --build-base build_jetson --install-base insta
 colcon test-result --test-result-base build_jetson --verbose
 ```
 
-2026-09-30 검증에서 AFTR 13개와 `laser_filters`, `serial`, `sllidar_ros2` 등 총 16개 Build가 성공했습니다. `laser_filters`와 `sllidar_ros2`가 stderr 경고를 출력했지만 Build는 완료됐습니다. Laptop에서 과거 97 Test 중 4개 실패, 4개 skip이 있었으며 실패는 보호된 팀 package에 있었습니다. 이번 Jetson Test는 실행하지 않았습니다. `aftr_description view_robot.launch.py`의 실제 GUI 실행도 별도 확인해야 합니다. Hardware에 영향을 줄 수 있는 bringup 및 주행 Launch는 operator가 통제할 때만 실행하세요.
+2026-09-30 검증에서 AFTR 13개와 `laser_filters`, `serial`, `sllidar_ros2` 등 총 16개 Build가 성공했습니다. `laser_filters`와 `sllidar_ros2`가 stderr 경고를 출력했지만 Build는 완료됐습니다. 2026-10-03 Jetson Test는 16개 package에서 총 97개 중 0 errors, 4 failures, 4 skipped로 끝났습니다. 실패는 모두 AFTR lint/docstring 검사로, `aftr_path_manager` 2개 (flake8, pep257), `aftr_status_led` 1개 (flake8), `aftr_tracking` 1개 (flake8)입니다. 외부 package의 실패는 보고되지 않았습니다. Laptop의 최신 기록은 97개 중 5 failures, 4 skipped이며 `aftr_mode_manager`의 추가 lint/docstring 실패가 포함되어 있습니다. `aftr_description view_robot.launch.py`의 실제 GUI 실행은 별도 확인해야 합니다. Hardware에 영향을 줄 수 있는 bringup 및 주행 Launch는 operator가 통제할 때만 실행하세요.
+
+## Operator GUI 실행
+
+실제 로봇의 기본 실행 명령입니다. `auto_start_base`, `enable_fall_camera`, `enable_fall_detection`의 기본값은 모두 `true`입니다. mode manager가 base bringup (`mdbot.launch.py`)을 시작하고 LiDAR, motor controller, RealSense, CUDA fall detector, GUI, audio, status LED가 함께 기동합니다. GUI의 기본 시스템 준비 표시는 `/scan` 메시지와 필수 controller의 활성화까지 확인한 뒤 바뀝니다. 주행 버튼을 누르기 전에 주변을 비우고 현장에서 로봇을 감독하세요.
+
+```bash
+cd ~/260929_ws/src/autonomous-following-towing-robot
+./scripts/docker_run_jetson.sh bash -lc 'ros2 launch aftr_gui operator_system.launch.py'
+```
+
+화면과 CUDA detector만 확인할 때에는 `auto_start_base:=false`를 명시합니다. 이 옵션은 자동 base 시작만 막으므로 GUI의 수동 명령까지 차단하지는 않습니다.
+
+```bash
+./scripts/docker_run_jetson.sh bash -lc 'ros2 launch aftr_gui operator_system.launch.py auto_start_base:=false show_fall_image:=false'
+```
+
+2026-10-03 실제 Jetson X11에서 `MDBOT 운영 화면` 창 표시와 mode manager의 IDLE 기동, RealSense, CUDA fall detector의 모델 로드 및 `cuda:0` 선택을 확인했습니다. 검증 중 `mdbot.launch.py`와 `ros2_control_node` 프로세스는 시작되지 않았고 종료 후 검증용 프로세스도 남지 않았습니다. RealSense가 간헐적인 frame timeout/IR stream 경고를 출력했고, 당시 audio node는 ALSA 장치를 열지 못해 SDL dummy 드라이버로 전환했습니다. 이후 Host PulseAudio 연결을 추가해 `aftr_audio`의 `audio_backend_ready=True`와 HDMI speaker의 실제 `system_ready.wav` 재생을 확인했습니다. 추론 노드는 `NO_PERSON`, `NORMAL`, 일시적인 `STALE_IMAGE`를 보고했습니다. 따라서 지속적인 카메라 수신, 전체 operator 흐름의 안내음, 수동 GUI 조작과 robot workflow는 별도 현장 기록이 필요합니다.
 
 ## 현재 제한
 
-2026-09-30 실제 Jetson에서 완성된 AFTR image가 드라이버 560 요구 경고 없이 시작했습니다. Python 3.10.12, `ROS_DISTRO=humble`, PyTorch 2.8.0, `torch.version.cuda=12.6`, `torch.cuda.is_available()=True`, GPU 이름 `Orin`, 실제 CUDA tensor matmul을 확인했습니다. 주요 Python import (`torch`, `torchvision`, `ultralytics`, `cv2`, `numpy`, `yaml`, `PyQt5`, `pygame`, `Jetson.GPIO`, `cv_bridge`)와 AFTR package 13개 discovery가 통과했습니다. `/dev/ttyMotor`, `/dev/ttyLidar`, `/dev/video0`, `/dev/gpiochip0`, `/dev/nvmap`, `/dev/nvhost-gpu`의 Container 내부 표시를 확인했습니다. Device 표시와 Python import는 RealSense 촬영, serial 통신, 실제 GPIO LED 출력, audio 재생 또는 GUI rendering의 동작 검증을 뜻하지 않습니다. Jetson colcon Test는 실행하지 않았습니다.
+2026-09-30 실제 Jetson에서 완성된 AFTR image가 드라이버 560 요구 경고 없이 시작했습니다. Python 3.10.12, `ROS_DISTRO=humble`, PyTorch 2.8.0, `torch.version.cuda=12.6`, `torch.cuda.is_available()=True`, GPU 이름 `Orin`, 실제 CUDA tensor matmul을 확인했습니다. 주요 Python import (`torch`, `torchvision`, `ultralytics`, `cv2`, `numpy`, `yaml`, `PyQt5`, `pygame`, `Jetson.GPIO`, `cv_bridge`)와 AFTR package 13개 discovery가 통과했습니다. `/dev/ttyMotor`, `/dev/ttyLidar`, `/dev/video0`, `/dev/gpiochip0`, `/dev/nvmap`, `/dev/nvhost-gpu`의 Container 내부 표시를 확인했습니다. 장치 표시와 import만으로 기능을 입증할 수 없으므로 실제 영상·LiDAR·CUDA 추론·X11·HDMI 안내음을 별도로 확인했습니다. 운영자는 기본 operator 실행 후 전체 동작이 정상이라고 확인했지만 Motor controller, GPIO 출력과 전체 주행 흐름의 제출용 로그는 별도로 정리해야 합니다. Jetson Test의 lint/docstring 실패 4개는 [검증 현황](../testing.md)에 기록했습니다.
 
-## 다음 작업 (2026-10-01 이어서)
+## 다음 작업
 
-- [ ] Jetson Container에서 위 `colcon test`와 `colcon test-result`를 실행하고 실패 package 및 로그를 기록합니다. 기존 Laptop 기준의 보호된 외부 package 실패 4건과 비교하되 외부 저장소 세 곳의 파일이나 Git 상태는 변경하지 않습니다.
-- [ ] 실제 RealSense 영상과 LiDAR scan 수신을 각각 확인합니다. `/dev/ttyMotor`, `/dev/ttyLidar` alias와 접근 권한을 확인하고, 모터 명령이나 자동 주행은 operator가 통제하는 별도 시험에서만 실행합니다.
-- [ ] Host의 `models/fall_detection/yolov8n-pose.pt`를 준비한 뒤 Container의 읽기 권한과 `cuda:0` 추론을 확인합니다. 모델 파일은 Git에 추가하지 않습니다.
-- [ ] 현장 장치에서 GPIO LED, GUI 표시, speaker 재생을 각각 확인하고 결과를 이 문서에 기록합니다.
+- [x] Jetson Container에서 `colcon test`와 `colcon test-result`를 실행했습니다 (2026-10-03, 97개 중 4 failures, 4 skipped). 실패는 모두 AFTR lint/docstring 검사이며, 외부 저장소 세 곳의 기존 Git 상태는 유지됐습니다.
+- [ ] AFTR의 기존 lint/docstring 실패 4개를 별도 정리할지 결정하고, 수정한다면 해당 package를 다시 Test합니다. `aftr_mode_manager`는 이번 Jetson 실행에서 통과했습니다.
+- [x] 2026-10-03 RealSense D435i에서 ROS color 1280×720 `rgb8`와 depth 848×480 `16UC1` 이미지 메시지를 수신했습니다. SLLidar의 `/scan`에서 `laser` frame, 1,800개 거리값을 가진 메시지 3개를 수신했고 각 메시지에 유효 거리값이 1,689~1,767개 있었습니다. 두 센서 노드는 검증 후 종료했습니다. `/dev/ttyMotor`, `/dev/ttyLidar` alias도 확인했습니다. 모터 명령이나 자동 주행은 operator가 통제하는 별도 시험에서만 실행합니다.
+- [x] 2026-10-03 기존 local 모델을 Host의 `models/fall_detection/yolov8n-pose.pt`에 복사하고 원본과 SHA-256 (`c6fa93dd1ee4a2c18c900a45c1d864a1c6f7aba75d84f91648a30b7fb641d212`) 일치를 확인했습니다. Container의 `/models`에서 모델을 읽어 실제 RealSense color 프레임 (1280×720)에 YOLO pose 추론을 실행했습니다. PyTorch CUDA 12.6, Orin, predictor `cuda:0`, pose 결과를 확인했습니다. 해당 프레임의 사람 검출은 0명이므로 낙상 판정 정확도는 아직 검증되지 않았습니다. 모델 파일은 Git에 추가하지 않습니다.
+- [ ] 현장 감독하에 기본 operator 명령을 실행하고 `/scan` 수신, `joint_state_broadcaster`와 `diff_drive_controller` 활성화, GUI의 기본 시스템 준비 상태를 확인합니다. 자동 주행은 별도로 검증합니다.
+- [x] X11의 operator GUI 창 표시와 Host HDMI speaker의 `system_ready.wav` 시험 재생을 확인했습니다.
+- [ ] 실제 GPIO LED 출력, GUI 버튼 조작, 전체 operator 실행의 audio event를 각각 확인하고 결과를 이 문서에 기록합니다.
 - [ ] 마무리 전에 AFTR의 Git 상태와 외부 저장소 세 곳의 HEAD 및 작업 트리 상태를 확인합니다.

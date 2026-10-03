@@ -1,99 +1,40 @@
-# Validation Checklist
+# 검증 현황
 
-Run focused tests after changing workflow, GUI, safety, SLAM, Nav2, or path recording.
+대회 시연에 필요한 재현 가능한 결과와 아직 확인할 항목을 구분해 기록합니다. 수치는 기록된 실행 시점의 결과이며 새 변경 후에는 다시 검증해야 합니다.
 
-## Laptop CPU Docker baseline
+## 확인된 결과
 
-Phase 1 was verified on an Ubuntu 26 LTS amd64 host using the Ubuntu 22.04 / ROS 2 Humble CPU-only image. Linux amd64 with Docker is the intended development setup; other host distributions have not been verified.
+| 환경 | 확인 내용 | 결과 |
+| --- | --- | --- |
+| Jetson Orin Nano Super, L4T R36.5.2 | Docker 시작, ROS 2 Humble, Python 3.10, CUDA 12.6, Orin GPU, CUDA tensor 연산 | 통과. Driver 560 요구 경고 없음 |
+| Jetson Docker | 13개 `aftr_*`와 외부 package 3개 Build | 16개 완료 |
+| Jetson Docker | RealSense D435i color/depth 영상과 SLLidar `/scan` | 실제 메시지 수신 |
+| Jetson Docker | `yolov8n-pose.pt`와 실제 카메라 프레임의 YOLO pose 추론 | predictor `cuda:0`에서 통과. 해당 프레임의 사람 검출은 0명 |
+| Jetson X11·HDMI | Operator GUI 창, `aftr_audio` PulseAudio 초기화, `system_ready.wav` | 화면 표시 및 실제 안내음 청취 확인 |
+| Jetson `colcon test` (2026-10-03) | 전체 97개 | 89 passed, 4 failed, 4 skipped, 0 errors |
+| Laptop CPU Docker | 16개 Build, 전체 97개 Test | Build 통과; Test는 5 failed, 4 skipped, 0 errors |
 
-From the Container's `/workspace` after the Laptop Build:
+Jetson Test의 실패 4개는 `aftr_path_manager`의 flake8·pep257, `aftr_status_led`의 flake8, `aftr_tracking`의 flake8입니다. 모두 AFTR lint/docstring 검사이며 외부 package의 Test 실패는 보고되지 않았습니다. Laptop의 최신 5개 실패에는 위 항목에 더해 `aftr_mode_manager` 검사 1개가 포함됩니다. Test 전체를 통과했다고 표기하지 않습니다.
 
-```bash
-colcon --log-base log_laptop test --build-base build_laptop --install-base install_laptop --parallel-workers 2
-colcon test-result --test-result-base build_laptop --verbose
-```
+운영자는 2026-10-03 기본 operator 실행 후 전체 동작이 정상이라고 확인했습니다. 본 문서의 표에는 별도로 재현 가능한 출력과 직접 확인된 항목만 통과로 적었습니다. 주행·GPIO·장시간 안정성의 제출용 로그는 아래 현장 항목으로 수집합니다.
 
-| Check | Phase 1 result |
-| --- | --- |
-| Docker image and ROS 2 Humble | Passed |
-| Architecture | `x86_64` |
-| Package discovery | 13 `aftr_*`, 3 external packages, no `mdbot_*` package identity |
-| Whole Workspace Build | 16 packages passed |
-| CPU-only PyTorch | `2.2.2+cpu`; `torch.version.cuda is None`; `torch.cuda.is_available() is False` |
-| Python import | `aftr_fall_detection` and six other node modules passed |
-| Launch / YAML syntax | 10 / 7 passed |
-| Tests | **89 passed, 4 skipped, 4 failed** |
-
-The four failures are existing lint/docstring checks: `aftr_path_manager` (2), `aftr_status_led` (1), and `aftr_mode_manager` (1). No test failure was attributed to missing hardware or CPU dependencies. The fall detector import and CPU fallback path passed, but actual model inference was not run because the model file was unavailable.
-
-Laptop CI excludes physical motor, LiDAR, RealSense, GPIO, GPU inference, and the default operator-system hardware launch. Those checks belong to Jetson integration. This baseline records the Phase 1 run; rerun the commands above for current results.
-
-## Current Laptop validation
-
-The cleanup and path migration were validated in Laptop Docker after the Phase 1 baseline. All 16 Workspace packages built. `colcon list` found 13 `aftr_*` packages and the three external packages. The production GUI loaded offscreen with its safety page, map and joystick widgets, status rendering, release confirmation dialog, and close path. The `/models` mount was readable and read-only; `/data/{paths,maps,poses}` was writable by the Host UID/GID. PyTorch still reported `torch.version.cuda is None` and `torch.cuda.is_available() is False`. The model file was absent, so inference was not run. Physical robot and X11 GUI behavior remain for device validation.
-
-The current test run reported **97 tests, 0 errors, 5 failures, 4 skipped**. The failures are existing lint/docstring checks in `aftr_mode_manager` (1), `aftr_path_manager` (2), `aftr_status_led` (1), and `aftr_tracking` (1). They concern unchanged logic or files outside this path-only scope. This result is distinct from the historical Phase 1 result above.
-
-The following sections retain the existing manual and robot-hardware validation checklist. They are separate from the Laptop CPU Docker commands above.
-
-## Build
+Jetson 컨테이너 안의 `/workspace`에서 재실행:
 
 ```bash
 source /opt/ros/humble/setup.bash
-export AFTR_WS=~/autonomous_following_towing_robot_ws
-cd "$AFTR_WS"
-colcon build --symlink-install --packages-select <changed_packages>
+source /workspace/install_jetson/setup.bash
+colcon --log-base log_jetson test --build-base build_jetson --install-base install_jetson --parallel-workers 2
+colcon test-result --test-result-base build_jetson --verbose
 ```
 
-For `aftr_fall_detection`, activate the GPU virtual environment and run
-`python3 -m colcon build --symlink-install --packages-select
-aftr_fall_detection`. Do not use bare `/usr/bin/colcon`, because it generates
-a system-Python console script that cannot import the virtual-environment GPU
-packages.
+Laptop에서는 `jetson`을 `laptop`으로 바꾼 별도 Build/Test 디렉터리를 사용합니다. 상세 실행 방법은 [Jetson Docker](development/jetson-docker.md)와 [Laptop Docker](development/laptop-docker.md)에 있습니다.
 
-## GUI
+## 현장 시연에서 확인할 항목
 
-- Main window opens without missing `.ui` files.
-- All visible buttons have readable foreground and background colors.
-- Buttons are disabled while a command is running.
-- The joystick accepts touches across the outer circle.
-- Touch release returns the joystick input to neutral.
-- Page changes do not leave stale joystick input active.
+- Base bringup의 `/scan`, `/odom`, `joint_state_broadcaster`, `diff_drive_controller` 준비와 비상 정지 절차
+- GUI의 추종·기록·정렬·위치 추정·경로 재생 흐름, 중간 정지와 재시작
+- 낙상 감지, detector heartbeat 상실, 안전 래치와 해제 조건
+- 실제 GPIO LED 변화와 전체 작업의 안내음 재생
+- RealSense 장시간 수신 안정성: 짧은 operator 실행에서 IR stream/frame timeout 경고가 관찰됨
 
-## Follow and recording
-
-- Standard follow starts and stops repeatedly.
-- Recording follow starts SLAM before path recording and follower motion.
-- A fresh `/map` is received for the current recording session.
-- Recording stop saves the path and pose.
-- Map-save failure is reported without leaving unsafe moving processes active.
-- A second recording session can start after returning HOME.
-
-## Localization and replay
-
-- SLAM stops before Nav2 localization starts.
-- Nav2 readiness and lifecycle states are confirmed before initial-pose publication.
-- Autonomous replay starts only from an allowed state.
-- Stop interrupts replay and returns to a stable state.
-
-## Fall safety
-
-- A confirmed fall activates the safety latch.
-- Partial pose does not accumulate toward a confirmed fall.
-- Detector `False` alone does not clear the safety latch.
-- Detector heartbeat loss during an active workflow starts safety cleanup.
-- Safety release is rejected while the detector is unhealthy or still reports `FALL_DETECTED`.
-- Successful release returns HOME and does not resume the previous task.
-
-## Repeated scenario
-
-Run this sequence at least three times:
-
-1. Start recording follow.
-2. Trigger safety stop.
-3. Clear safety stop.
-4. Start recording follow again.
-5. Finish recording normally.
-6. Complete alignment and autonomous preparation.
-
-Record the full ROS log whenever a step enters `ERROR` or a managed process requires forced termination.
+작업 중 `ERROR` 또는 비정상 프로세스 종료가 발생하면 ROS 로그와 `/mode_manager/status`를 함께 기록합니다. 현장 검증 방법은 [시연·운영 안내](operation.md)와 [안전 정책](safety.md)을 참고하세요.

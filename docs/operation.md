@@ -1,76 +1,35 @@
-# Operator Guide
+# 한이음 드림업 시연·운영 안내
 
-This document describes the normal touchscreen workflow.
+이 문서는 Jetson Orin Nano Super에서 작업자 추종, 경로 기록, 위치 추정, 경로 재생, 낙상 안전 정지를 시연하는 순서입니다. 시스템 구조는 [아키텍처](architecture.md), 안전 동작의 상세 조건은 [안전 정책](safety.md)을 참고하세요.
 
-## Start
+## 시작 전 확인
 
-Launch the operator system and wait until the base system is ready.
+- 로봇 주변을 비우고 정지·전원 차단을 담당할 운영자를 현장에 둡니다.
+- Host에 `/dev/ttyMotor`, `/dev/ttyLidar`, RealSense D435i, HDMI 출력 장치가 연결돼 있는지 확인합니다.
+- Workspace의 `models/fall_detection/yolov8n-pose.pt`를 준비합니다. 컨테이너에서는 `/models/fall_detection/yolov8n-pose.pt`로 읽습니다.
+- Jetson Docker image와 16개 package가 빌드돼 있어야 합니다. 처음 준비할 때는 [Jetson Docker 안내](development/jetson-docker.md)를 따릅니다.
 
-## Follow
+## 전체 시스템 실행
 
-1. Leave `경로 저장` unchecked.
-2. Press `작업자 추종`.
-3. Press the stop or back button to end following.
-
-## Recording follow
-
-1. Enable `경로 저장`.
-2. Press `작업자 추종`.
-3. The system starts SLAM, waits for a fresh map, starts the path manager, confirms recording, and then starts the follower.
-4. Press the recording-finish button to save the path and continue to alignment preparation.
-5. Autonomous preparation stops if a new, complete map pair cannot be verified. An older map is never accepted as the result of the current recording.
-
-## Alignment
-
-Use the large virtual joystick to align the robot.
-
-- The whole outer joystick circle is touchable.
-- The knob moves directly to the touched position.
-- Releasing the joystick returns the input to neutral. Actual deceleration is handled by the robot control stack.
-- Press `정렬 완료` after positioning is complete.
-
-## Autonomous replay
-
-When localization and Nav2 are ready, press `이전 위치로 이동` to replay the saved path. Use the stop button to interrupt driving.
-
-## Safety stop
-
-When a fall or detector-loss safety event occurs:
-
-1. The active workflow is stopped.
-2. The safety page displays the captured camera image and safety status.
-3. Check the worker and surrounding area directly.
-4. Press `안전 정지 해제`.
-5. Confirm the dialog.
-6. The system returns to HOME without automatically resuming the previous task.
-
-## Button behavior
-
-- Stop actions do not require confirmation.
-- Safety release requires confirmation.
-- Buttons are disabled while another command is being processed.
-- The GUI only enables commands listed by `mode_manager` in `allowed_commands`.
-- The virtual joystick publishes commands on the initial HOME screen and during active manual alignment.
-- Follow, recording, localization, autonomous driving, error, and safety states disable manual joystick commands.
-
-## Runtime recovery
-
-- The camera, fall detector, audio node, and status LED node are respawned by the operator launch if their process exits unexpectedly.
-- A temporary fall-detector restart blocks new movement until its heartbeat returns.
-- The detector heartbeat is withheld when camera frames become stale, so a camera-only failure also stops an active workflow and cannot resume it automatically.
-- Managed motion processes converge to `ERROR` after an unexpected exit and never resume movement automatically.
-- Error clear returns to HOME only after follower, Nav2, path-manager, and SLAM process groups are confirmed stopped.
-
-## Mapping without the fall camera
-
-For a controlled SLAM diagnostic run, disable both the RealSense process and
-fall detection explicitly:
+Host에서 다음 명령을 실행합니다. `auto_start_base`, `enable_fall_camera`, `enable_fall_detection`의 기본값은 모두 `true`입니다. `mode_manager`가 base bringup을 시작하므로 motor controller와 LiDAR도 기동합니다.
 
 ```bash
-ros2 launch aftr_gui operator_system.launch.py \
-  enable_fall_camera:=false \
-  enable_fall_detection:=false
+cd ~/260929_ws/src/autonomous-following-towing-robot
+./scripts/docker_run_jetson.sh bash -lc 'ros2 launch aftr_gui operator_system.launch.py'
 ```
 
-This mode keeps the GUI, tracking, LiDAR, SLAM, and path recording available,
-but fall-detection safety is unavailable for the entire run.
+GUI에서 기본 시스템 준비 표시를 확인합니다. 준비 판정에는 `/scan` 메시지와 필수 controller의 활성화가 포함됩니다. 준비되지 않으면 launch 로그의 `missing topics`와 controller 오류를 먼저 확인합니다. 창을 닫으면 operator launch가 종료됩니다.
+
+## 시연 흐름
+
+1. **작업자 추종:** `경로 저장`을 끈 상태에서 `작업자 추종`을 누르고, 정지 버튼으로 종료합니다.
+2. **경로 기록:** `경로 저장`을 켜고 추종을 시작합니다. SLAM의 새 `/map`과 경로 기록 상태를 확인한 뒤 기록을 종료합니다. 이때 경로·지도·pose 저장이 완료돼야 합니다.
+3. **정렬과 위치 추정:** 화면의 조이스틱으로 정렬하고 손을 떼면 입력이 중립으로 돌아오는지 확인합니다. `정렬 완료` 후 SLAM이 멈추고 Nav2/AMCL 준비가 완료되는지 확인합니다.
+4. **경로 재생:** `자율주행 준비 완료` 화면에서 허용된 이동 방향을 선택합니다. 주행 중 정지 버튼이 동작하는지 현장 감독하에 확인합니다.
+5. **안전 정지:** 낙상 또는 detector 장애 시 활성 작업이 정지하고 안전 화면이 표시되는지 통제된 시험에서 확인합니다. 현장을 확인한 뒤 `안전 정지 해제`와 확인 대화상자를 사용합니다. 이전 작업은 자동으로 재개되지 않습니다.
+
+상태 전이, ROS topic/service 이름과 데이터 경로는 [아키텍처](architecture.md), [ROS 인터페이스](interfaces.md)에 기록돼 있습니다. 시연 결과와 미검증 항목은 [검증 현황](testing.md)에 따로 남깁니다.
+
+## 시연 기록
+
+날짜, Jetson image/commit, 실행 명령, GUI 화면, `/mode_manager/status`, `/scan`, controller 상태와 실패 로그를 함께 보관합니다. 구동이 예상과 다르면 주행을 중단하고 원인을 확인한 뒤 다시 시작합니다.
