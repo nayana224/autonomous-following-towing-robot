@@ -23,6 +23,7 @@ def generate_launch_description():
     enable_fall_detection = LaunchConfiguration("enable_fall_detection")
     show_fall_image = LaunchConfiguration("show_fall_image")
     robust_tracking = LaunchConfiguration("robust_tracking")
+    auto_start_base = LaunchConfiguration("auto_start_base")
 
     fall_detection_share = get_package_share_directory("aftr_fall_detection")
     fall_detection_params = os.path.join(
@@ -38,7 +39,7 @@ def generate_launch_description():
         output="screen",
         parameters=[
             {
-                "auto_start_base": True,
+                "auto_start_base": ParameterValue(auto_start_base, value_type=bool),
                 "robust_tracking": robust_tracking,
                 "fall_detection_required": ParameterValue(
                     enable_fall_detection,
@@ -146,6 +147,11 @@ def generate_launch_description():
                 "show_fall_image",
                 default_value="false",
                 description="Show the OpenCV fall-detection debug window.",
+            ),
+            DeclareLaunchArgument(
+                "auto_start_base",
+                default_value="true",
+                description="Automatically start base hardware after the operator GUI opens.",
             ),
             DeclareLaunchArgument(
                 "robust_tracking",

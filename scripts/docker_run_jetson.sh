@@ -132,6 +132,25 @@ if [[ "$mode" == auto ]]; then
 fi
 if [[ "$mode" == headless ]]; then
   docker_flags+=(--env QT_QPA_PLATFORM=offscreen --env SDL_AUDIODRIVER=dummy)
+else
+  pulse_socket="${XDG_RUNTIME_DIR:-/run/user/$host_uid}/pulse/native"
+  pulse_cookie="${PULSE_COOKIE:-$HOME/.config/pulse/cookie}"
+  if [[ -S "$pulse_socket" ]]; then
+    docker_flags+=(
+      --env PULSE_SERVER=unix:/tmp/aftr-pulse/native
+      --env SDL_AUDIODRIVER=pulseaudio
+      --volume "$pulse_socket:/tmp/aftr-pulse/native"
+    )
+    if [[ -r "$pulse_cookie" ]]; then
+      docker_flags+=(
+        --env PULSE_COOKIE=/tmp/aftr-pulse/cookie
+        --volume "$pulse_cookie:/tmp/aftr-pulse/cookie:ro"
+      )
+    fi
+    echo "PulseAudio forwarding enabled for the Host default output." >&2
+  else
+    echo "Host PulseAudio socket is unavailable; using direct ALSA device access." >&2
+  fi
 fi
 
 docker run "${docker_flags[@]}" aftr-dev:humble-jetson "$@"

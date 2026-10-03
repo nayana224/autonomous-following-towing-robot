@@ -83,7 +83,6 @@ class RobotDashboard(QMainWindow):
         self.render_operator_step()
         self.update_button_enabled_state(True)
         self.refresh_manual_control()
-        QTimer.singleShot(800, self.start_base_once)
 
     def initialize_display_state(self):
         """Initialize GUI-only state used before the first ROS status update."""
@@ -176,10 +175,6 @@ class RobotDashboard(QMainWindow):
         self.mode_manager_client.map_received.connect(self.handle_map_message)
         self.mode_manager_client.amcl_pose_received.connect(self.handle_pose_message)
         self.mode_manager_client.planned_path_received.connect(self.handle_path_message)
-
-    def start_base_once(self):
-        """Request base bringup once after the GUI starts."""
-        self.request_command("start_base", enforce_allowed=False)
 
     def request_command(self, command_key, enforce_allowed=True):
         """Call one mode-manager command service."""
