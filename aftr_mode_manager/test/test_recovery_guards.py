@@ -141,7 +141,6 @@ def test_manual_control_is_enabled_at_home_and_during_active_alignment():
     ).manual_control_allowed
 
 
-
 def test_recording_start_keeps_runtime_order_before_follower_motion():
     """Recording infrastructure must be ready before follower motion starts."""
     manager = HardenedFallModeManagerNode.__new__(HardenedFallModeManagerNode)
@@ -213,7 +212,6 @@ def test_recording_start_keeps_runtime_order_before_follower_motion():
     ]
 
 
-
 def test_false_fall_observation_does_not_release_hardened_safety_latch():
     """Detector False must not clear the operator-controlled safety latch."""
     manager = HardenedFallModeManagerNode.__new__(HardenedFallModeManagerNode)
@@ -248,7 +246,6 @@ def test_hardened_safety_stop_uses_base_workflow_stop(monkeypatch):
 
     assert result.success
     assert calls == ["base_stop"]
-
 
 
 class _Nav2Process:
@@ -360,6 +357,7 @@ def test_changed_saved_map_stops_nav2_before_localization(monkeypatch):
 
     def parent_start(_self, response):
         events.append("parent")
+        manager.nav2_process.running = True
         response.success = True
         return response
 
@@ -384,7 +382,6 @@ def test_changed_saved_map_stops_nav2_before_localization(monkeypatch):
     ]
     assert manager.nav2_process.stop_calls == [1.5]
     assert manager.nav2_loaded_map_signature == new_signature
-
 
 
 def test_sequential_localization_stops_slam_before_nav2(monkeypatch):
