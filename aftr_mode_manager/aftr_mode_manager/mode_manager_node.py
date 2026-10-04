@@ -58,41 +58,6 @@ class ModeManagerNode(
 ):
     """Own the ROS-facing assembly of the AFTR workflow manager."""
 
-    ALLOWED_TRANSITIONS = {
-        RobotMode.IDLE: {
-            RobotMode.FOLLOW,
-            RobotMode.RECORDING_FOLLOW,
-            RobotMode.LOCALIZING,
-        },
-        RobotMode.FOLLOW: {
-            RobotMode.IDLE,
-        },
-        RobotMode.RECORDING_FOLLOW: {
-            RobotMode.IDLE,
-            RobotMode.ALIGNMENT,
-        },
-        RobotMode.ALIGNMENT: {
-            RobotMode.IDLE,
-            RobotMode.LOCALIZING,
-            RobotMode.AUTONOMOUS_READY,
-        },
-        RobotMode.LOCALIZING: {
-            RobotMode.IDLE,
-            RobotMode.ALIGNMENT,
-            RobotMode.AUTONOMOUS_READY,
-        },
-        RobotMode.AUTONOMOUS_READY: {
-            RobotMode.IDLE,
-            RobotMode.ALIGNMENT,
-            RobotMode.AUTONOMOUS_DRIVING,
-        },
-        RobotMode.AUTONOMOUS_DRIVING: {
-            RobotMode.IDLE,
-            RobotMode.ALIGNMENT,
-            RobotMode.AUTONOMOUS_DRIVING,
-        },
-    }
-
     RUNTIME_PARAMETER_DEFAULTS = (
         ("auto_start_base", False),
         ("shutdown_timeout_sec", 10.0),
