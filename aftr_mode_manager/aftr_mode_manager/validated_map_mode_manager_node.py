@@ -109,20 +109,31 @@ class ValidatedMapModeManagerNode(SequentialFallModeManagerNode):
 
     def start_localizing(self, response):
         """Validate map files before starting or rechecking localization."""
-        validation_error = self._saved_map_validation_error()
-        if validation_error:
-            return self.fail_response(
-                response,
-                "cannot start localization: " + validation_error,
-            )
-
-        map_signature = self._saved_map_signature()
+        map_signature = self._validated_map_signature(response)
+        if map_signature is None:
+            return response
         if not self._prepare_existing_nav2_before_localization(
             response,
             map_signature,
         ):
             return response
 
+        return self._start_localization_with_map_signature(
+            response,
+            map_signature,
+        )
+
+    def _validated_map_signature(self, response):
+        validation_error = self._saved_map_validation_error()
+        if validation_error:
+            self.fail_response(
+                response,
+                "cannot start localization: " + validation_error,
+            )
+            return None
+        return self._saved_map_signature()
+
+    def _start_localization_with_map_signature(self, response, map_signature):
         result = super().start_localizing(response)
         if self.nav2_process.is_running():
             self.nav2_loaded_map_signature = map_signature
