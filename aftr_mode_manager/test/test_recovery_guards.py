@@ -136,3 +136,75 @@ def test_manual_control_is_enabled_at_home_and_during_active_alignment():
     assert manager.operator_view_for_mode(
         RobotMode.ALIGNMENT,
     ).manual_control_allowed
+
+
+
+def test_recording_start_keeps_runtime_order_before_follower_motion():
+    """Recording infrastructure must be ready before follower motion starts."""
+    manager = HardenedFallModeManagerNode.__new__(HardenedFallModeManagerNode)
+    events = []
+
+    idle_process = SimpleNamespace(is_running=lambda: False)
+    manager.slam_process = idle_process
+    manager.path_process = idle_process
+    manager.follower_node = idle_process
+    manager.path_start_record_client = object()
+    manager.fresh_map_timeout_sec = 12.0
+    manager.latest_path_status = {}
+    manager.last_path_follow_event = "idle"
+    manager.last_map_message_at = None
+    manager.status = SimpleNamespace(mode=RobotMode.IDLE)
+    manager.reset_follow_runtime_state = lambda: events.append("reset_follow")
+    manager.ensure_base_running = lambda _response: (
+        events.append("base") or True
+    )
+    manager.ensure_slam_running = lambda _response: (
+        events.append("slam") or True
+    )
+    manager._wait_for_fresh_map = lambda _timeout: (
+        events.append("fresh_map") or True
+    )
+    manager.ensure_path_manager_running = lambda _response: (
+        events.append("path_manager") or True
+    )
+    manager.wait_for_path_manager_service = (
+        lambda _client, _name, timeout_sec: (
+            events.append(("record_service", timeout_sec)) or True
+        )
+    )
+    manager.call_trigger_service = (
+        lambda _client, _name, timeout_sec: (
+            events.append(("start_record", timeout_sec)) or True
+        )
+    )
+    manager.ensure_follower_node_running = lambda _response: (
+        events.append("follower") or True
+    )
+
+    def request_mode(response, mode, command_name):
+        events.append(("mode", mode, command_name))
+        manager.status.mode = mode
+        response.success = True
+        return response
+
+    manager.request_mode = request_mode
+    manager.notify_follow_start = lambda recording: events.append(
+        ("notify_follow", recording)
+    )
+
+    response = SimpleNamespace(success=False, message="")
+    result = manager.start_recording_follow(response)
+
+    assert result.success
+    assert events == [
+        "reset_follow",
+        "base",
+        "slam",
+        "fresh_map",
+        "path_manager",
+        ("record_service", 5.0),
+        ("start_record", 2.0),
+        "follower",
+        ("mode", RobotMode.RECORDING_FOLLOW, "start_recording_follow"),
+        ("notify_follow", True),
+    ]
