@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <chrono>
 #include <csignal>
-#include <cstdio>
 #include <iostream>
 #include <memory>
 #include <string>
