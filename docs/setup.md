@@ -11,15 +11,13 @@ mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
 
 git clone https://github.com/nayana224/autonomous-following-towing-robot.git
+git clone https://github.com/roverrobotics-forks/serial-ros2.git
+git clone https://github.com/Slamtec/sllidar_ros2.git
 ```
 
-다음 외부 패키지도 같은 `~/ros2_ws/src` 아래에 있어야 합니다.
+추가로 `laser_filters` package가 같은 `~/ros2_ws/src` 아래에 있어야 합니다. `laser_filters`는 프로젝트용 fork가 확정되면 clone URL을 이 문서에 추가합니다.
 
-- `laser_filters`
-- `serial-ros2`
-- `sllidar_ros2`
-
-이 세 저장소는 AFTR repository와 별도로 관리됩니다. 실제 로봇에 적용할 때는 로봇에서 검증한 호환 버전을 사용하세요.
+외부 저장소는 AFTR repository와 별도로 관리됩니다. 실제 로봇 배포에는 프로젝트에서 검증한 호환 revision을 사용하는 것을 권장합니다.
 
 최종 Workspace 예시는 다음과 같습니다.
 

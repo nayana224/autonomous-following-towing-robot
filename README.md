@@ -88,10 +88,13 @@ mkdir -p ~/ros2_ws/src
 cd ~/ros2_ws/src
 
 git clone https://github.com/nayana224/autonomous-following-towing-robot.git
+git clone https://github.com/roverrobotics-forks/serial-ros2.git
+git clone https://github.com/Slamtec/sllidar_ros2.git
+
 cd autonomous-following-towing-robot
 ```
 
-이 프로젝트는 같은 `~/ros2_ws/src` 아래에 `laser_filters`, `serial-ros2`, `sllidar_ros2`가 함께 있어야 합니다. 사용 중인 로봇 환경과 호환되는 버전을 준비한 뒤 다음 단계를 진행하세요.
+이 프로젝트는 같은 `~/ros2_ws/src` 아래에 `laser_filters`도 함께 있어야 합니다. `laser_filters`는 프로젝트에서 사용할 fork가 정리되면 해당 저장소 URL을 이 문서에 추가할 예정입니다.
 
 ### Laptop 개발 환경
 
