@@ -208,3 +208,40 @@ def test_recording_start_keeps_runtime_order_before_follower_motion():
         ("mode", RobotMode.RECORDING_FOLLOW, "start_recording_follow"),
         ("notify_follow", True),
     ]
+
+
+
+def test_false_fall_observation_does_not_release_hardened_safety_latch():
+    """Detector False must not clear the operator-controlled safety latch."""
+    manager = HardenedFallModeManagerNode.__new__(HardenedFallModeManagerNode)
+    manager.status = SimpleNamespace(
+        fall_detected=True,
+        safety_stop_active=True,
+    )
+    published = []
+    manager.publish_status = lambda: published.append(True)
+
+    manager.fall_detected_callback(SimpleNamespace(data=False))
+
+    assert manager.status.fall_detected is False
+    assert manager.status.safety_stop_active is True
+    assert published == [True]
+
+
+def test_hardened_safety_stop_uses_base_workflow_stop(monkeypatch):
+    """Safety cleanup must keep the existing base stop-workflow dispatch."""
+    manager = HardenedFallModeManagerNode.__new__(HardenedFallModeManagerNode)
+    response = SimpleNamespace(success=False, message="")
+    calls = []
+
+    def base_stop(_self, result):
+        calls.append("base_stop")
+        result.success = True
+        return result
+
+    monkeypatch.setattr(ModeManagerNode, "stop_workflow", base_stop)
+
+    result = manager._stop_workflow_for_safety(response)
+
+    assert result.success
+    assert calls == ["base_stop"]
