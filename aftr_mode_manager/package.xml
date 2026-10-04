@@ -6,7 +6,7 @@
   <description>Autonomous Following and Towing Robot mode state and transition manager.</description>
   <maintainer email="inpyoi1304@gmail.com">pyo</maintainer>
   <license>Apache License 2.0</license>
-
+  <!-- [User Code Begin] -->
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>ament_index_python</depend>
@@ -18,7 +18,6 @@
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
   <depend>tf2_ros</depend>
-
   <exec_depend>aftr_bringup</exec_depend>
   <exec_depend>aftr_navigation</exec_depend>
   <exec_depend>aftr_path_manager</exec_depend>
@@ -26,6 +25,10 @@
   <exec_depend>aftr_tracking</exec_depend>
   <exec_depend>nav2_map_server</exec_depend>
   <exec_depend>rviz2</exec_depend>
+  <!-- [User Code End] -->
+
+
+
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
