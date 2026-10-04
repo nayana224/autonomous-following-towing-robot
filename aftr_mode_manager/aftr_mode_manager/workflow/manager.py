@@ -10,7 +10,6 @@ rules, and the high-level orchestration used by the GUI-facing command
 services.
 """
 
-import json
 import time
 
 from nav2_msgs.srv import ClearEntireCostmap
@@ -21,6 +20,9 @@ from aftr_mode_manager.mode_state import RobotMode
 from aftr_mode_manager.runtime.process_supervisor import (
     cleanup_registered_process_groups,
 )
+from aftr_mode_manager.workflow.path_events import is_blocked_path_event
+from aftr_mode_manager.workflow.path_events import is_terminal_path_failure_event
+from aftr_mode_manager.workflow.path_events import parse_path_status
 from aftr_mode_manager.workflow.state import WorkflowStateMixin
 
 
@@ -308,48 +310,18 @@ class WorkflowManagerMixin(WorkflowStateMixin):
 
     @staticmethod
     def parse_path_status(text):
-        """Parse a JSON path-manager status payload.
-
-        Args:
-            text: Raw text received from ``/path_manager/status``.
-
-        Returns:
-            Parsed dictionary when the payload is valid JSON, otherwise ``{}``.
-        """
-        text = text.strip()
-        if not text:
-            return {}
-        try:
-            data = json.loads(text)
-        except json.JSONDecodeError:
-            return {}
-        return data if isinstance(data, dict) else {}
+        """Parse a path-manager status payload."""
+        return parse_path_status(text)
 
     @staticmethod
     def is_blocked_path_event(event):
-        """Return whether a path-manager event means obstacle blocking."""
-        if not event:
-            return False
-
-        return (
-            "temporary failure" in event
-            or "obstacle" in event
-            or "blocked" in event
-        )
+        """Return whether a path event indicates obstacle blocking."""
+        return is_blocked_path_event(event)
 
     @staticmethod
     def is_terminal_path_failure_event(event):
-        """Return whether replay stopped and cannot recover by itself."""
-        normalized = str(event).strip().lower()
-        return (
-            normalized == "goal_rejected"
-            or normalized.startswith("aborted_status_")
-            or normalized.startswith("failed:")
-            or (
-                normalized.startswith("blocked:")
-                and "retry limit" in normalized
-            )
-        )
+        """Return whether a path event is a terminal replay failure."""
+        return is_terminal_path_failure_event(event)
 
     def _reject_if_error_state(self, response):
         """Reject a command when the current workflow mode is ``ERROR``."""
