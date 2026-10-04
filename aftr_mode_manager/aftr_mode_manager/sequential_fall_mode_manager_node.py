@@ -266,22 +266,8 @@ class SequentialFallModeManagerNode(HardenedFallModeManagerNode):
             return response
 
         self._cancel_active_path_follow(timeout_sec=2.0)
-
-        if self.slam_process.is_running():
-            self.set_operator_message("SLAM을 종료하고 있습니다.", publish=True)
-            if not self.slam_process.stop(self.shutdown_timeout_sec):
-                return self.fail_response(response, "SLAM shutdown timed out")
-            self.status.slam_running = False
-            self.status.slam_ready = False
-            if not self._wait_for_process_exit(
-                self.slam_process,
-                "SLAM",
-                self.shutdown_timeout_sec,
-            ):
-                return self.fail_response(
-                    response,
-                    "SLAM did not fully exit before Nav2 startup",
-                )
+        if not self._stop_slam_before_localization(response):
+            return response
 
         self.set_operator_message("위치 추정 시스템을 시작하고 있습니다.", publish=True)
         if not self.start_nav2_for_localization(response):
@@ -296,6 +282,39 @@ class SequentialFallModeManagerNode(HardenedFallModeManagerNode):
             )
             return response
 
+        if not self._publish_initial_pose_for_localization(response):
+            return response
+
+        return self.request_mode(
+            response,
+            RobotMode.LOCALIZING,
+            "start_localizing",
+        )
+
+    def _stop_slam_before_localization(self, response):
+        if not self.slam_process.is_running():
+            return True
+
+        self.set_operator_message("SLAM을 종료하고 있습니다.", publish=True)
+        if not self.slam_process.stop(self.shutdown_timeout_sec):
+            self.fail_response(response, "SLAM shutdown timed out")
+            return False
+
+        self.status.slam_running = False
+        self.status.slam_ready = False
+        if not self._wait_for_process_exit(
+            self.slam_process,
+            "SLAM",
+            self.shutdown_timeout_sec,
+        ):
+            self.fail_response(
+                response,
+                "SLAM did not fully exit before Nav2 startup",
+            )
+            return False
+        return True
+
+    def _publish_initial_pose_for_localization(self, response):
         time.sleep(max(
             float(self.nav2_initial_pose_delay_sec),
             self.heavy_process_settle_sec,
@@ -311,7 +330,8 @@ class SequentialFallModeManagerNode(HardenedFallModeManagerNode):
             self.status.nav2_running = self.nav2_process.is_running()
             self.status.nav2_ready = False
             self.status.amcl_pose_ready = False
-            return self.fail_response(response, "failed to publish initial pose")
+            self.fail_response(response, "failed to publish initial pose")
+            return False
 
         is_ready, missing_topics = self.amcl_pose_readiness.wait_until_ready(
             self.amcl_pose_ready_timeout_sec,
@@ -324,12 +344,7 @@ class SequentialFallModeManagerNode(HardenedFallModeManagerNode):
                 "AMCL pose is not visible yet after initial pose; missing topics: "
                 + ", ".join(missing_topics)
             )
-
-        return self.request_mode(
-            response,
-            RobotMode.LOCALIZING,
-            "start_localizing",
-        )
+        return True
 
 
 def main(args=None):
