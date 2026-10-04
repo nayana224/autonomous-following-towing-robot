@@ -503,15 +503,9 @@ class RobotDashboard(QMainWindow):
         for button, (command, _enforce_allowed) in self.command_button_map.items():
             button.setEnabled(enabled and command in self.allowed_commands)
 
-        self.btn_follow.setEnabled(
-            enabled and follow_mode_available(self.allowed_commands)
-        )
-        self.btn_autonomous.setEnabled(
-            enabled and "prepare_autonomous" in self.allowed_commands
-        )
-        self.save_path_check.setEnabled(
-            enabled and follow_mode_available(self.allowed_commands)
-        )
+        follow_enabled = enabled and follow_mode_available(self.allowed_commands)
+        self.btn_follow.setEnabled(follow_enabled)
+        self.save_path_check.setEnabled(follow_enabled)
 
     def handle_joystick(self, x_axis, y_axis):
         """Store the latest joystick position for periodic publishing."""
