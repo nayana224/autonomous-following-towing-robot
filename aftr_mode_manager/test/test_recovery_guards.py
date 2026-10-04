@@ -17,6 +17,9 @@ from aftr_mode_manager.operator_status import OperatorStatusMixin
 from aftr_mode_manager.sequential_fall_mode_manager_node import (
     SequentialFallModeManagerNode,
 )
+from aftr_mode_manager.validated_map_mode_manager_node import (
+    ValidatedMapModeManagerNode,
+)
 
 
 class _Process:
@@ -245,3 +248,139 @@ def test_hardened_safety_stop_uses_base_workflow_stop(monkeypatch):
 
     assert result.success
     assert calls == ["base_stop"]
+
+
+
+class _Nav2Process:
+    """Minimal Nav2 process double for map-reuse tests."""
+
+    def __init__(self, running=True, stop_succeeds=True):
+        self.running = running
+        self.stop_succeeds = stop_succeeds
+        self.stop_calls = []
+
+    def is_running(self):
+        return self.running
+
+    def stop(self, timeout_sec):
+        self.stop_calls.append(timeout_sec)
+        if self.stop_succeeds:
+            self.running = False
+        return self.stop_succeeds
+
+    def describe(self):
+        return "nav2-test-process"
+
+
+def test_validated_localization_rejects_invalid_map_before_parent_start(monkeypatch):
+    """Invalid saved maps must stop before sequential localization begins."""
+    manager = ValidatedMapModeManagerNode.__new__(ValidatedMapModeManagerNode)
+    manager._saved_map_validation_error = lambda: "saved map missing"
+    parent_calls = []
+
+    def parent_start(_self, response):
+        parent_calls.append(True)
+        response.success = True
+        return response
+
+    monkeypatch.setattr(
+        SequentialFallModeManagerNode,
+        "start_localizing",
+        parent_start,
+    )
+    manager.fail_response = lambda response, message: (
+        setattr(response, "success", False)
+        or setattr(response, "message", message)
+        or response
+    )
+
+    response = SimpleNamespace(success=True, message="")
+    result = manager.start_localizing(response)
+
+    assert not result.success
+    assert "saved map missing" in result.message
+    assert parent_calls == []
+
+
+def test_validated_localization_reuses_nav2_for_same_map(monkeypatch):
+    """The same saved-map signature must reuse a running Nav2 instance."""
+    manager = ValidatedMapModeManagerNode.__new__(ValidatedMapModeManagerNode)
+    signature = ("map.yaml", 1, 2, "map.pgm", 3, 4)
+    manager._saved_map_validation_error = lambda: ""
+    manager._saved_map_signature = lambda: signature
+    manager.nav2_loaded_map_signature = signature
+    manager.nav2_process = _Nav2Process(running=True)
+    manager.get_logger = lambda: SimpleNamespace(info=lambda _message: None)
+    parent_calls = []
+
+    def parent_start(_self, response):
+        parent_calls.append("parent")
+        response.success = True
+        return response
+
+    monkeypatch.setattr(
+        SequentialFallModeManagerNode,
+        "start_localizing",
+        parent_start,
+    )
+
+    response = SimpleNamespace(success=False, message="")
+    result = manager.start_localizing(response)
+
+    assert result.success
+    assert parent_calls == ["parent"]
+    assert manager.nav2_process.stop_calls == []
+    assert manager.nav2_loaded_map_signature == signature
+
+
+def test_changed_saved_map_stops_nav2_before_localization(monkeypatch):
+    """A changed map must stop the old Nav2 process before parent startup."""
+    manager = ValidatedMapModeManagerNode.__new__(ValidatedMapModeManagerNode)
+    old_signature = ("old.yaml", 1, 2, "old.pgm", 3, 4)
+    new_signature = ("new.yaml", 5, 6, "new.pgm", 7, 8)
+    manager._saved_map_validation_error = lambda: ""
+    manager._saved_map_signature = lambda: new_signature
+    manager.nav2_loaded_map_signature = old_signature
+    manager.nav2_process = _Nav2Process(running=True)
+    manager.shutdown_timeout_sec = 1.5
+    manager.heavy_process_settle_sec = 0.2
+    manager.status = SimpleNamespace(
+        nav2_running=True,
+        nav2_ready=True,
+        amcl_pose_ready=True,
+    )
+    events = []
+    manager.log_nav2_stop_request = lambda reason: events.append(("stop", reason))
+    manager.get_logger = lambda: SimpleNamespace(info=lambda _message: None)
+    manager.fail_response = lambda response, message: (
+        setattr(response, "success", False)
+        or setattr(response, "message", message)
+        or response
+    )
+
+    def parent_start(_self, response):
+        events.append("parent")
+        response.success = True
+        return response
+
+    monkeypatch.setattr(
+        SequentialFallModeManagerNode,
+        "start_localizing",
+        parent_start,
+    )
+    monkeypatch.setattr(
+        "aftr_mode_manager.validated_map_mode_manager_node.time.sleep",
+        lambda _seconds: events.append("settle"),
+    )
+
+    response = SimpleNamespace(success=False, message="")
+    result = manager.start_localizing(response)
+
+    assert result.success
+    assert events == [
+        ("stop", "saved map changed before localization"),
+        "settle",
+        "parent",
+    ]
+    assert manager.nav2_process.stop_calls == [1.5]
+    assert manager.nav2_loaded_map_signature == new_signature
