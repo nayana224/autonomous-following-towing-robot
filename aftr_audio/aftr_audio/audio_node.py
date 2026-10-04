@@ -14,8 +14,8 @@ from std_msgs.msg import String
 import yaml
 
 from aftr_audio.audio_policy import AudioPolicy
-from aftr_audio.bgm_player import BackgroundMusicPlayer
 from aftr_audio.audio_policy import SFX_PLAYBACK_MODE_INTERRUPT
+from aftr_audio.bgm_player import BackgroundMusicPlayer
 from aftr_audio.sfx_player import SoundEffectPlayer
 
 
