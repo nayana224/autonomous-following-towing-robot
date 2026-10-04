@@ -384,3 +384,120 @@ def test_changed_saved_map_stops_nav2_before_localization(monkeypatch):
     ]
     assert manager.nav2_process.stop_calls == [1.5]
     assert manager.nav2_loaded_map_signature == new_signature
+
+
+
+def test_sequential_localization_stops_slam_before_nav2(monkeypatch):
+    """SLAM must fully exit before Nav2 starts localization."""
+    manager = SequentialFallModeManagerNode.__new__(
+        SequentialFallModeManagerNode,
+    )
+    events = []
+
+    class _RunningProcess:
+        def __init__(self):
+            self.running = True
+
+        def is_running(self):
+            return self.running
+
+        def stop(self, timeout_sec):
+            events.append(("slam_stop", timeout_sec))
+            self.running = False
+            return True
+
+    class _Nav2Process:
+        def is_running(self):
+            return True
+
+        def describe(self):
+            return "nav2-test-process"
+
+    manager.slam_process = _RunningProcess()
+    manager.nav2_process = _Nav2Process()
+    manager.shutdown_timeout_sec = 1.0
+    manager.nav2_initial_pose_delay_sec = 0.4
+    manager.heavy_process_settle_sec = 0.2
+    manager.initial_pose_service_attempts = 3
+    manager.amcl_pose_ready_timeout_sec = 5.0
+    manager.status = SimpleNamespace(
+        slam_running=True,
+        slam_ready=True,
+        nav2_running=False,
+        nav2_ready=False,
+        amcl_pose_ready=False,
+    )
+    manager.path_publish_initial_pose_client = object()
+    manager.amcl_pose_message_readiness = SimpleNamespace(
+        reset=lambda: events.append("amcl_message_reset")
+    )
+    manager.amcl_pose_readiness = SimpleNamespace(
+        wait_until_ready=lambda timeout: (
+            events.append(("amcl_ready", timeout)) or (True, [])
+        )
+    )
+    manager.ensure_base_running = lambda _response: (
+        events.append("base") or True
+    )
+    manager.ensure_path_manager_running = lambda _response: (
+        events.append("path_manager") or True
+    )
+    manager._cancel_active_path_follow = lambda timeout_sec: events.append(
+        ("cancel_path", timeout_sec)
+    )
+    manager.set_operator_message = lambda message, publish=False: events.append(
+        ("operator", message, publish)
+    )
+    manager._wait_for_process_exit = (
+        lambda _process, name, timeout: (
+            events.append(("wait_exit", name, timeout)) or True
+        )
+    )
+    manager.start_nav2_for_localization = lambda _response: (
+        events.append("start_nav2") or True
+    )
+    manager.call_trigger_service_with_retry = (
+        lambda _client, name, timeout_sec, attempts, success_probe: (
+            events.append(
+                ("initial_pose", name, timeout_sec, attempts, success_probe)
+            )
+            or True
+        )
+    )
+    manager._initial_pose_runtime_ready = lambda: True
+    manager.request_mode = lambda response, mode, command: (
+        events.append(("mode", mode, command))
+        or setattr(response, "success", True)
+        or response
+    )
+    manager.fail_response = lambda response, message: (
+        setattr(response, "success", False)
+        or setattr(response, "message", message)
+        or response
+    )
+    manager.get_logger = lambda: SimpleNamespace(
+        info=lambda _message: None,
+        warning=lambda _message: None,
+    )
+
+    monkeypatch.setattr(
+        "aftr_mode_manager.sequential_fall_mode_manager_node.time.sleep",
+        lambda seconds: events.append(("sleep", seconds)),
+    )
+
+    response = SimpleNamespace(success=False, message="")
+    result = manager.start_localizing(response)
+
+    assert result.success
+    assert events.index(("slam_stop", 1.0)) < events.index("start_nav2")
+    assert events.index(("wait_exit", "SLAM", 1.0)) < events.index("start_nav2")
+    assert events.index("start_nav2") < next(
+        index
+        for index, event in enumerate(events)
+        if isinstance(event, tuple) and event[0] == "initial_pose"
+    )
+    assert events[-1] == (
+        "mode",
+        RobotMode.LOCALIZING,
+        "start_localizing",
+    )
