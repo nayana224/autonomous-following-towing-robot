@@ -24,22 +24,16 @@ from aftr_mode_manager.workflow.path_events import is_blocked_path_event
 from aftr_mode_manager.workflow.path_events import is_terminal_path_failure_event
 from aftr_mode_manager.workflow.path_events import parse_path_status
 from aftr_mode_manager.workflow.state import WorkflowStateMixin
+from aftr_mode_manager.workflow.transitions import ACTIVE_NAV2_MODES
+from aftr_mode_manager.workflow.transitions import AUTONOMOUS_MODES
+from aftr_mode_manager.workflow.transitions import next_drive_direction
 
 
 class WorkflowManagerMixin(WorkflowStateMixin):
     """Provide workflow events, transitions, and command orchestration."""
 
-    AUTONOMOUS_MODES = {
-        RobotMode.AUTONOMOUS_READY,
-        RobotMode.AUTONOMOUS_DRIVING,
-    }
-
-    ACTIVE_NAV2_MODES = {
-        RobotMode.ALIGNMENT,
-        RobotMode.LOCALIZING,
-        RobotMode.AUTONOMOUS_READY,
-        RobotMode.AUTONOMOUS_DRIVING,
-    }
+    AUTONOMOUS_MODES = AUTONOMOUS_MODES
+    ACTIVE_NAV2_MODES = ACTIVE_NAV2_MODES
 
     MANAGED_RUNTIME_NODE_NAMES = {
         "/controller_manager",
@@ -274,12 +268,8 @@ class WorkflowManagerMixin(WorkflowStateMixin):
             self.status.last_command = "path_completed_alignment"
             self.status.transition_count += 1
             self.alignment_control_active = False
-            self.next_drive_direction = (
-                "forward"
-                if (
-                    self.active_drive_direction or self.pending_drive_direction
-                ) == "reverse"
-                else "reverse"
+            self.next_drive_direction = next_drive_direction(
+                self.active_drive_direction or self.pending_drive_direction
             )
             self.active_drive_direction = ""
             self.pending_drive_direction = ""

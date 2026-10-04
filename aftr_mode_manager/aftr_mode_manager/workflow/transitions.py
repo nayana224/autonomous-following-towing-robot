@@ -7,6 +7,19 @@
 from aftr_mode_manager.mode_state import RobotMode
 
 
+AUTONOMOUS_MODES = {
+    RobotMode.AUTONOMOUS_READY,
+    RobotMode.AUTONOMOUS_DRIVING,
+}
+
+ACTIVE_NAV2_MODES = {
+    RobotMode.ALIGNMENT,
+    RobotMode.LOCALIZING,
+    RobotMode.AUTONOMOUS_READY,
+    RobotMode.AUTONOMOUS_DRIVING,
+}
+
+
 ALLOWED_TRANSITIONS = {
     RobotMode.IDLE: {
         RobotMode.FOLLOW,
@@ -48,3 +61,7 @@ def is_transition_allowed(
     next_mode: RobotMode,
 ) -> bool:
     return next_mode in ALLOWED_TRANSITIONS.get(current_mode, set())
+
+
+def next_drive_direction(current_direction: str) -> str:
+    return "forward" if current_direction == "reverse" else "reverse"
