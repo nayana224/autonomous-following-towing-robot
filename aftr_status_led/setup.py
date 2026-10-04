@@ -34,7 +34,10 @@ setup(
     zip_safe=True,
     maintainer="mechatukka",
     maintainer_email="inpyoi1304@gmail.com",
-    description="GPIO-backed status LED node for Autonomous Following and Towing Robot workflow feedback.",
+    description=(
+        "GPIO-backed status LED node for Autonomous Following and Towing Robot "
+        "workflow feedback."
+    ),
     license="Apache-2.0",
     extras_require={
         "test": [
