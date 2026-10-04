@@ -1,5 +1,9 @@
 // Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
 #include "mdbot_hardware/md_hardware_interface.hpp"
+
+#include <cmath>
+#include <limits>
+
 #include "hardware_interface/types/hardware_interface_type_values.hpp"
 #include "pluginlib/class_list_macros.hpp"
 
