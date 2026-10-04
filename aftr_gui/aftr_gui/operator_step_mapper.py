@@ -4,51 +4,72 @@
 from __future__ import annotations
 
 
+PAGE_BY_STEP = {
+    "HOME": "page_home",
+    "FOLLOWING": "page_follow",
+    "RECORDING_FOLLOW": "page_recording_follow",
+    "ALIGNMENT_DECISION": "page_after_recording",
+    "ALIGNING": "page_alignment",
+    "LOCALIZING": "page_autonomous_ready",
+    "AUTONOMOUS_READY": "page_autonomous_ready",
+    "AUTONOMOUS_DRIVING": "page_autonomous_driving",
+    "ERROR": "page_error",
+}
+
+BUSY_MESSAGE_BY_COMMAND = {
+    "auto_start_base": "기본 시스템을 시작하고 있습니다.",
+    "start_base": "기본 시스템을 시작하고 있습니다.",
+    "check_base_ready": "기본 시스템 준비 상태를 확인하고 있습니다.",
+    "start_follow": "추종 모드를 준비하고 있습니다.",
+    "start_recording_follow": "경로 저장 추종을 준비하고 있습니다.",
+    "finish_recording_for_alignment": (
+        "경로와 지도를 저장한 뒤 위치 추정을 준비하고 있습니다."
+    ),
+    "start_alignment": "정렬 모드로 전환하고 있습니다.",
+    "skip_alignment": "정렬 없이 현재 위치를 기준으로 자율주행을 준비하고 있습니다.",
+    "finish_alignment": (
+        "정렬된 위치를 저장하고 자율주행을 준비하고 있습니다."
+    ),
+    "save_pose": "현재 위치를 저장하고 있습니다.",
+    "start_localizing": "위치 추정을 시작하고 있습니다.",
+    "set_autonomous_ready": "자율주행 준비 상태를 확인하고 있습니다.",
+    "prepare_autonomous": "자율주행을 준비하고 있습니다.",
+    "path_forward": "이전 위치로 이동하고 있습니다.",
+    "path_reverse": "이전 위치로 이동하고 있습니다.",
+    "path_forward_auto": "이전 위치로 이동할 준비를 하고 있습니다.",
+    "path_reverse_auto": "이전 위치로 이동할 준비를 하고 있습니다.",
+    "stop": "현재 작업을 중단하고 초기 화면으로 돌아가고 있습니다.",
+    "clear_error": "오류를 해제하고 있습니다.",
+    "shutdown": "시스템을 종료하고 있습니다.",
+}
+
+AUTONOMOUS_BUSY_MODES = {
+    "LOCALIZING",
+    "AUTONOMOUS_READY",
+    "AUTONOMOUS_DRIVING",
+    "ALIGNMENT",
+}
+
+MODE_LABELS = {
+    "IDLE": "대기 중",
+    "FOLLOW": "작업자 추종 중",
+    "RECORDING_FOLLOW": "작업자 추종 및 경로 저장 중",
+    "ALIGNMENT": "수동 정렬 중",
+    "LOCALIZING": "위치 추정 중",
+    "AUTONOMOUS_READY": "자율주행 준비 완료",
+    "AUTONOMOUS_DRIVING": "자율주행 중",
+    "ERROR": "오류 발생",
+}
+
+
 def page_name_for_step(step: str) -> str | None:
     """Map an ``operator_step`` value to a Qt Designer page attribute."""
-    pages = {
-        "HOME": "page_home",
-        "FOLLOWING": "page_follow",
-        "RECORDING_FOLLOW": "page_recording_follow",
-        "ALIGNMENT_DECISION": "page_after_recording",
-        "ALIGNING": "page_alignment",
-        "LOCALIZING": "page_autonomous_ready",
-        "AUTONOMOUS_READY": "page_autonomous_ready",
-        "AUTONOMOUS_DRIVING": "page_autonomous_driving",
-        "ERROR": "page_error",
-    }
-    return pages.get(step)
+    return PAGE_BY_STEP.get(step)
 
 
 def busy_status_message(last_command: str) -> str:
     """Return a stable busy message for the current mode-manager command."""
-    messages = {
-        "auto_start_base": "기본 시스템을 시작하고 있습니다.",
-        "start_base": "기본 시스템을 시작하고 있습니다.",
-        "check_base_ready": "기본 시스템 준비 상태를 확인하고 있습니다.",
-        "start_follow": "추종 모드를 준비하고 있습니다.",
-        "start_recording_follow": "경로 저장 추종을 준비하고 있습니다.",
-        "finish_recording_for_alignment": (
-            "경로와 지도를 저장한 뒤 위치 추정을 준비하고 있습니다."
-        ),
-        "start_alignment": "정렬 모드로 전환하고 있습니다.",
-        "skip_alignment": "정렬 없이 현재 위치를 기준으로 자율주행을 준비하고 있습니다.",
-        "finish_alignment": (
-            "정렬된 위치를 저장하고 자율주행을 준비하고 있습니다."
-        ),
-        "save_pose": "현재 위치를 저장하고 있습니다.",
-        "start_localizing": "위치 추정을 시작하고 있습니다.",
-        "set_autonomous_ready": "자율주행 준비 상태를 확인하고 있습니다.",
-        "prepare_autonomous": "자율주행을 준비하고 있습니다.",
-        "path_forward": "이전 위치로 이동하고 있습니다.",
-        "path_reverse": "이전 위치로 이동하고 있습니다.",
-        "path_forward_auto": "이전 위치로 이동할 준비를 하고 있습니다.",
-        "path_reverse_auto": "이전 위치로 이동할 준비를 하고 있습니다.",
-        "stop": "현재 작업을 중단하고 초기 화면으로 돌아가고 있습니다.",
-        "clear_error": "오류를 해제하고 있습니다.",
-        "shutdown": "시스템을 종료하고 있습니다.",
-    }
-    return messages.get(
+    return BUSY_MESSAGE_BY_COMMAND.get(
         last_command,
         "요청을 처리하고 있습니다. 잠시만 기다려 주세요.",
     )
@@ -56,12 +77,7 @@ def busy_status_message(last_command: str) -> str:
 
 def busy_page_title(last_command: str, current_mode: str) -> str | None:
     """Return an optional page title override while one command is busy."""
-    if last_command == "stop" and current_mode in {
-        "LOCALIZING",
-        "AUTONOMOUS_READY",
-        "AUTONOMOUS_DRIVING",
-        "ALIGNMENT",
-    }:
+    if last_command == "stop" and current_mode in AUTONOMOUS_BUSY_MODES:
         return "주행 중단 및 초기 화면 이동"
     return None
 
@@ -75,12 +91,7 @@ def busy_page_message(
     detail = str(operator_message).strip()
     if detail:
         return detail
-    if last_command == "stop" and current_mode in {
-        "LOCALIZING",
-        "AUTONOMOUS_READY",
-        "AUTONOMOUS_DRIVING",
-        "ALIGNMENT",
-    }:
+    if last_command == "stop" and current_mode in AUTONOMOUS_BUSY_MODES:
         return "현재 작업을 안전하게 중단하고 초기 화면으로 돌아가고 있습니다."
     return None
 
@@ -124,17 +135,7 @@ def error_status_message(_last_error: str) -> str:
 
 def mode_text(mode: str) -> str:
     """Return the Korean operator-facing label for one robot mode."""
-    labels = {
-        "IDLE": "대기 중",
-        "FOLLOW": "작업자 추종 중",
-        "RECORDING_FOLLOW": "작업자 추종 및 경로 저장 중",
-        "ALIGNMENT": "수동 정렬 중",
-        "LOCALIZING": "위치 추정 중",
-        "AUTONOMOUS_READY": "자율주행 준비 완료",
-        "AUTONOMOUS_DRIVING": "자율주행 중",
-        "ERROR": "오류 발생",
-    }
-    return labels.get(mode, "상태 확인 중")
+    return MODE_LABELS.get(mode, "상태 확인 중")
 
 
 def direction_button_visibility(
