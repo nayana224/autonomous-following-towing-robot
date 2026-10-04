@@ -969,7 +969,6 @@ class WorkflowManagerMixin(WorkflowStateMixin):
 
         if not self.ensure_path_manager_running(response):
             return response
-
         if not self._require_amcl_pose_ready(
             response,
             "AMCL pose is not ready; missing topics: ",
@@ -990,15 +989,9 @@ class WorkflowManagerMixin(WorkflowStateMixin):
             self.notify_autonomous_failed()
             return response
 
-        if reverse:
-            path_client = self.path_follow_saved_path_reverse_client
-            path_service_name = "/path_manager/follow_saved_path_reverse"
-            direction_text = "reverse"
-        else:
-            path_client = self.path_follow_saved_path_client
-            path_service_name = "/path_manager/follow_saved_path"
-            direction_text = "forward"
-
+        path_client, path_service_name, direction_text = (
+            self._saved_path_request(reverse)
+        )
         self.pending_drive_direction = requested_direction
         path_service_succeeded = self.call_trigger_service(
             path_client,
@@ -1009,26 +1002,59 @@ class WorkflowManagerMixin(WorkflowStateMixin):
             timeout_sec=float(self.path_replay_service_timeout_sec),
         )
         if not path_service_succeeded:
-            # A response can be lost, or a repeated button request can find an
-            # already active path. Reconcile from path_manager's periodic
-            # status instead of leaving the robot driving on the READY page.
-            if bool(self.latest_path_status.get("following_path", False)):
-                self.get_logger().warning(
-                    "saved-path service was not confirmed, but path_manager "
-                    "reports an active FollowPath; reconciling drive state"
-                )
-                self.last_service_error = ""
-            else:
-                self.pending_drive_direction = ""
-                detail = self.last_service_error or (
-                    f"failed to start {direction_text} saved path following"
-                )
-                self.notify_autonomous_failed()
-                return self.reject_response(
-                    response,
-                    detail,
-                )
+            failure_response = self._reconcile_saved_path_service_failure(
+                response,
+                direction_text,
+            )
+            if failure_response is not None:
+                return failure_response
 
+        immediate_response = self._saved_path_immediate_result(
+            response,
+            direction_text,
+        )
+        if immediate_response is not None:
+            return immediate_response
+
+        return self._complete_saved_path_start(
+            response,
+            requested_direction,
+            command_name,
+        )
+
+    def _saved_path_request(self, reverse):
+        if reverse:
+            return (
+                self.path_follow_saved_path_reverse_client,
+                "/path_manager/follow_saved_path_reverse",
+                "reverse",
+            )
+        return (
+            self.path_follow_saved_path_client,
+            "/path_manager/follow_saved_path",
+            "forward",
+        )
+
+    def _reconcile_saved_path_service_failure(self, response, direction_text):
+        # A response can be lost, or a repeated button request can find an
+        # already active path. Reconcile from path_manager's periodic status
+        # instead of leaving the robot driving on the READY page.
+        if bool(self.latest_path_status.get("following_path", False)):
+            self.get_logger().warning(
+                "saved-path service was not confirmed, but path_manager "
+                "reports an active FollowPath; reconciling drive state"
+            )
+            self.last_service_error = ""
+            return None
+
+        self.pending_drive_direction = ""
+        detail = self.last_service_error or (
+            f"failed to start {direction_text} saved path following"
+        )
+        self.notify_autonomous_failed()
+        return self.reject_response(response, detail)
+
+    def _saved_path_immediate_result(self, response, direction_text):
         # A very fast action rejection/completion can be reported by the path
         # status callback while this service call is still returning.
         if self.status.mode == RobotMode.ERROR:
@@ -1037,10 +1063,8 @@ class WorkflowManagerMixin(WorkflowStateMixin):
                 self.status.last_error
                 or f"failed to start {direction_text} saved path following"
             )
-            return self.reject_response(
-                response,
-                detail,
-            )
+            return self.reject_response(response, detail)
+
         if (
             self.status.mode == RobotMode.ALIGNMENT
             and self.last_path_follow_event == "completed"
@@ -1051,6 +1075,14 @@ class WorkflowManagerMixin(WorkflowStateMixin):
             self.publish_status()
             return response
 
+        return None
+
+    def _complete_saved_path_start(
+        self,
+        response,
+        requested_direction,
+        command_name,
+    ):
         self.status.last_error = ""
         self.active_drive_direction = requested_direction
         self.pending_drive_direction = ""
