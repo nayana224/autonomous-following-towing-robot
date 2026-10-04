@@ -166,7 +166,7 @@ class HardenedFallModeManagerNode(FallAwareModeManagerNode):
             self.publish_status()
 
             response = Trigger.Response()
-            result = super(FallAwareModeManagerNode, self).stop_workflow(response)
+            result = self._stop_workflow_for_safety(response)
             if not result.success:
                 result = self._recover_safety_cleanup(result)
 
@@ -194,6 +194,11 @@ class HardenedFallModeManagerNode(FallAwareModeManagerNode):
             self.status.safety_stop_in_progress = False
             self.command_lock.release()
             self.publish_status()
+
+    def _stop_workflow_for_safety(self, response):
+        # Keep safety cleanup tied to the base workflow stop implementation.
+        # Fall-aware latch handling is owned by this hardened layer.
+        return super(FallAwareModeManagerNode, self).stop_workflow(response)
 
     def _recover_safety_cleanup(self, failed_response):
         """Treat data-save failures as warnings when all motion processes stop."""
