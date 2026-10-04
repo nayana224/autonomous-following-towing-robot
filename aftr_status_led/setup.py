@@ -1,8 +1,11 @@
 # Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
 """Setup configuration for aftr_status_led."""
 
+
+# [User Code Begin]
 import os
 from glob import glob
+# [User Code End]
 
 from setuptools import find_packages
 from setuptools import setup
@@ -20,10 +23,12 @@ setup(
             ["resource/" + package_name],
         ),
         ("share/" + package_name, ["package.xml"]),
+        # [User Code Begin]
         (
             os.path.join("share", package_name, "launch"),
             glob(os.path.join("launch", "*.launch.py")),
         ),
+        # [User Code End]
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -38,7 +43,9 @@ setup(
     },
     entry_points={
         "console_scripts": [
+            # [User Code Begin]
             "status_led_node = aftr_status_led.safety_status_led_node:main",
+            # [User Code End]
         ],
     },
 )
