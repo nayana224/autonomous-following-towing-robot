@@ -2,11 +2,10 @@
 #
 # Licensed under the Apache License, Version 2.0
 
-"""ROS service callback bridge for bringup-related commands.
+"""Bringup command callbacks and startup runtime guards.
 
-This module is intentionally thin. It exposes ROS service callbacks that apply
-the shared exclusive-command guard, then delegate the real work to
-``BringupRuntimeMixin`` and ``Nav2RuntimeMixin``.
+This module owns bringup-facing command callbacks, stale-runtime startup
+checks, and the bridge to ``BringupRuntimeMixin`` and ``Nav2RuntimeMixin``.
 """
 
 import rclpy
@@ -22,7 +21,7 @@ class BringupManagerMixin(
     BringupRuntimeMixin,
     Nav2RuntimeMixin,
 ):
-    """Expose bringup operations and Nav2 helpers behind callback methods."""
+    """Own bringup callbacks and startup guards for managed runtime processes."""
 
     MANAGED_RUNTIME_NODE_NAMES = {
         "/controller_manager",
