@@ -16,6 +16,9 @@ class _Logger:
     def info(self, _message):
         """Ignore informational output during unit tests."""
 
+    def warning(self, _message):
+        """Ignore warning output during unit tests."""
+
 
 class _Future:
     """Return a predetermined costmap service result."""
@@ -120,7 +123,6 @@ def test_costmap_refresh_rejects_unavailable_clear_service():
     assert not harness.refresh_local_costmap_before_replay(response)
     assert response.success is False
     assert "service unavailable" in harness.rejection
-
 
 
 class _ReplayHarness(WorkflowManagerMixin):
