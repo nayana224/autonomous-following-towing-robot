@@ -7,6 +7,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
+# [User Code Begin]
 install(DIRECTORY
   launch
   config
@@ -23,5 +24,6 @@ install(PROGRAMS
   scripts/create_udev_rules.sh
   DESTINATION share/${PROJECT_NAME}/scripts
 )
+# [User Code End]
 
 ament_package()

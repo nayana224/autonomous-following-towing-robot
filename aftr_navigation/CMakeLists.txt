@@ -3,6 +3,7 @@ project(aftr_navigation)
 
 find_package(ament_cmake REQUIRED)
 
+# [User Code Begin]
 install(DIRECTORY
   config
   launch
@@ -10,6 +11,6 @@ install(DIRECTORY
   rviz
   DESTINATION share/${PROJECT_NAME}
 )
-
+# [User Code End]
 
 ament_package()

@@ -1,6 +1,9 @@
 # Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
+
+# [User Code Begin]
 import os
 from glob import glob
+# [User Code End]
 
 from setuptools import find_packages
 from setuptools import setup
@@ -15,9 +18,11 @@ setup(
     data_files=[
         ("share/ament_index/resource_index/packages", ["resource/" + package_name]),
         ("share/" + package_name, ["package.xml"]),
+        # [User Code Begin]
         (os.path.join("share", package_name, "launch"), glob("launch/*.launch.py")),
         (os.path.join("share", package_name, "gui"), glob("gui/*.ui")),
         (os.path.join("share", package_name, "images"), glob("images/*")),
+        # [User Code End]
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -28,7 +33,9 @@ setup(
     extras_require={"test": ["pytest"]},
     entry_points={
         "console_scripts": [
+            # [User Code Begin]
             "operator_gui = aftr_gui.operator_gui:main",
+            # [User Code End]
         ],
     },
 )
