@@ -33,7 +33,10 @@ setup(
     zip_safe=True,
     maintainer="pyo",
     maintainer_email="inpyoi1304@gmail.com",
-    description="Autonomous Following and Towing Robot odometry path recording and pose saving node.",
+    description=(
+        "Autonomous Following and Towing Robot odometry path recording "
+        "and pose saving node."
+    ),
     license="Apache License 2.0",
     extras_require={
         "test": [
