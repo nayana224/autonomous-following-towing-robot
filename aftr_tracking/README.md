@@ -1,98 +1,66 @@
-# Autonomous Following and Towing Robot Tracking
+# aftr_tracking
 
-`aftr_tracking` detects worker candidates from `/scan` and follows one locked
-worker. The default tracker uses the field-tested nearest-target behavior from
-`aftr_tracking/tracker_node.py`. The normal integration entry point is the complete
-operator system, not this package's launch file by itself.
+`aftr_tracking`은 LiDAR `/scan`에서 작업자 후보를 탐지하고 선택된 작업자를 추종하는 ROS 2 package입니다.
 
-## Tracking behavior
+## 기본 동작
 
-- Initial worker search uses a ±50 degree field of view and requires a candidate
-  for 20 scan frames.
-- Follow mode uses the original ±80 degree field of view.
-- The nearest candidate is locked, then updated only when its displacement from
-  the previous target is less than `0.55 m`.
-- A missing or unmatched candidate retains the last target for up to 16 frames
-  before returning to `SEARCH`.
-- The following distance is `0.47 m`, with the original acceleration, braking,
-  TTC, and between-robot-and-worker obstacle checks preserved.
+기본 tracker는 `aftr_tracking/tracker_node.py`를 사용합니다.
 
-The public `/follow_state` values remain `SEARCH`, `FOLLOW`, and `OBSTACLE` for
-compatibility. The mode manager converts those states into voice and LED events;
-the tracking node does not start its own audio process.
+- 초기 탐색 영역: 전방 약 ±50°
+- 추종 중 탐색 영역: 약 ±80°
+- 가까운 작업자 후보를 추종 대상으로 선택
+- 일시적인 가림 또는 후보 손실 시 짧은 시간 동안 이전 target 유지
+- 작업자와의 목표 거리를 유지하도록 `/cmd_vel` 생성
+- 작업자와 로봇 사이 장애물 조건을 함께 확인
 
-## Build
+현재 field-tested 기본 tracker의 동작을 기준으로 운용합니다.
 
-The commands below use the manual `build/install/log` layout. For Laptop Docker, use [the development guide](../docs/development/laptop-docker.md). Run builds from the ROS workspace root:
+## Public Interface
 
-```bash
-cd ~/autonomous_following_towing_robot_ws
-source /opt/ros/humble/setup.bash
-colcon build --symlink-install --packages-select \
-  aftr_tracking aftr_mode_manager aftr_gui aftr_status_led
-source install/setup.bash
+### 입력
+
+```text
+/scan
 ```
 
-Re-source `install/setup.bash` in every new terminal. A package-local source
-directory is not a valid runtime environment because the mode manager starts
-the installed launch and console-script entries.
+### 주요 출력
 
-## Run through the operator system
-
-Start the complete system with the stable tracker (the default):
-
-```bash
-cd ~/autonomous_following_towing_robot_ws
-source /opt/ros/humble/setup.bash
-source install/setup.bash
-ros2 launch aftr_gui operator_system.launch.py
+```text
+/cmd_vel
+/follow_state
 ```
 
-The operator launch starts the mode manager, GUI, audio, status LED, and fall
-safety components. The tracking process itself starts when the operator selects
-a follow workflow; it is not expected to be present while the robot is idle.
+`/follow_state`의 대표 상태:
 
-The experimental motion-prediction tracker remains available for comparison,
-but is not the default:
+- `SEARCH`
+- `FOLLOW`
+- `OBSTACLE`
+
+Optional experimental tracker는 추가 상태 정보를 `/tracking_detail`로 제공할 수 있지만, 일반 Workflow는 `/follow_state`를 기준으로 동작합니다.
+
+## 전체 시스템에서 실행
+
+Tracking process는 Robot이 IDLE일 때 항상 실행되는 것이 아니라 Operator가 추종 Workflow를 선택할 때 Mode Manager가 시작합니다.
+
+전체 시스템 실행 방법은 [설치 및 실행](../docs/setup.md)과 [운용 안내](../docs/operation.md)를 참고하세요.
+
+## Experimental Tracker
+
+비교용 experimental tracker를 사용할 경우 Operator launch의 `robust_tracking` option을 사용할 수 있습니다.
 
 ```bash
 ros2 launch aftr_gui operator_system.launch.py robust_tracking:=true
 ```
 
-This switch changes only the tracking executable. Normal field tests should omit
-it. Neither mode changes the motor driver, `ros2_control`, mapping, navigation,
-or the MD400T firmware settings.
+일반 현장 운용에서는 기본 tracker 사용을 권장합니다.
 
-## Observe and tune
+## 운용 주의사항
 
-Useful runtime checks are:
+실제 추종 시험 전에는 다음을 확인합니다.
 
-```bash
-ros2 topic echo /follow_state
-ros2 topic echo /cmd_vel
-```
+- 작업자와 로봇 사이에 충분한 공간 확보
+- 비상 정지가 가능한 운영자 배치
+- 초기 저속 환경에서 추종 방향 확인
+- 작업자 손실 및 장애물 발생 시 정지 동작 확인
 
-The default tracker does not publish `/tracking_detail`; that topic belongs to
-the optional experimental tracker. For the stable tracker, use RViz person
-markers together with `/target_person`, `/follow_state`, and `/cmd_vel`.
-
-The mode manager delays only the red LED transition for a brief obstacle pulse
-(`follow_obstacle_led_hold_sec`, default `0.5`). It adds no delay to the
-follower's own stop decision. Clearing the red indication is also debounced by
-`follow_obstacle_clear_hold_sec` (default `0.4`).
-
-## No-hardware tests
-
-```bash
-cd ~/autonomous_following_towing_robot_ws
-source /opt/ros/humble/setup.bash
-colcon test --packages-select aftr_tracking
-colcon test-result --test-result-base build/aftr_tracking --verbose
-python3 -m pytest \
-  src/autonomous-following-towing-robot/aftr_mode_manager/test/test_follow_state_debounce.py -q
-ros2 launch aftr_gui operator_system.launch.py --show-args
-```
-
-Before a moving test, lift the drive wheels or keep an emergency-stop operator
-ready. Verify initial confirmation, normal turning, brief leg occlusion, obstacle
-stop, worker loss after 16 frames, voice transitions, and LED transitions.
+테스트, lint 및 개발자용 명령은 [개발 및 유지보수](../docs/maintenance.md)를 참고하세요.
