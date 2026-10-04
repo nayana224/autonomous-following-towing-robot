@@ -18,8 +18,10 @@
 Jetson Host에서:
 
 ```bash
-cd ~/260929_ws/src/autonomous-following-towing-robot
-./scripts/docker_run_jetson.sh bash -lc   'ros2 launch aftr_gui operator_system.launch.py'
+cd ~/ros2_ws/src/autonomous-following-towing-robot
+
+./scripts/docker_run_jetson.sh bash -lc \
+  'ros2 launch aftr_gui operator_system.launch.py'
 ```
 
 GUI가 실행되면 기본 시스템 준비 상태를 확인합니다.

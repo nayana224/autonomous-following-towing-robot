@@ -81,10 +81,22 @@ ROS 2 Humble 기반의 작업자 추종 및 견인 로봇입니다. 작업자 �
 
 ## 빠른 시작
 
+먼저 일반적인 ROS 2 Workspace를 준비하고 저장소를 clone합니다.
+
+```bash
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
+
+git clone https://github.com/nayana224/autonomous-following-towing-robot.git
+cd autonomous-following-towing-robot
+```
+
+이 프로젝트는 같은 `~/ros2_ws/src` 아래에 `laser_filters`, `serial-ros2`, `sllidar_ros2`가 함께 있어야 합니다. 사용 중인 로봇 환경과 호환되는 버전을 준비한 뒤 다음 단계를 진행하세요.
+
 ### Laptop 개발 환경
 
 ```bash
-cd ~/autonomous_following_towing_robot_ws/src/autonomous-following-towing-robot
+cd ~/ros2_ws/src/autonomous-following-towing-robot
 ./scripts/docker_build_laptop.sh
 ./scripts/docker_run_laptop.sh
 ```
@@ -99,7 +111,7 @@ source /workspace/install_laptop/setup.bash
 ### Jetson 배포 환경
 
 ```bash
-cd ~/260929_ws/src/autonomous-following-towing-robot
+cd ~/ros2_ws/src/autonomous-following-towing-robot
 ./scripts/docker_build_jetson.sh
 ./scripts/docker_run_jetson.sh
 ```

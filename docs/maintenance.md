@@ -4,6 +4,24 @@
 
 설치와 실행은 [설치 및 실행](setup.md), 실제 운용은 [운용 안내](operation.md)를 먼저 참고하세요.
 
+## 기본 Workspace 경로
+
+문서의 예시는 다음 Workspace 구조를 기준으로 합니다.
+
+```text
+~/ros2_ws/
+└── src/
+    └── autonomous-following-towing-robot/
+```
+
+Host에서 repository로 이동할 때:
+
+```bash
+cd ~/ros2_ws/src/autonomous-following-towing-robot
+```
+
+Container에서는 Workspace가 `/workspace`에 mount됩니다.
+
 ## Workspace Build
 
 Laptop:

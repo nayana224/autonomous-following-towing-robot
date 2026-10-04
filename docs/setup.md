@@ -4,10 +4,27 @@
 
 ## 1. Workspace 구성
 
-저장소는 ROS 2 Workspace의 `src/` 아래에 배치합니다. 다음 외부 패키지도 같은 `src/` 아래에 있어야 합니다.
+일반적인 ROS 2 Workspace를 `~/ros2_ws`에 구성하는 것을 기준으로 설명합니다.
+
+```bash
+mkdir -p ~/ros2_ws/src
+cd ~/ros2_ws/src
+
+git clone https://github.com/nayana224/autonomous-following-towing-robot.git
+```
+
+다음 외부 패키지도 같은 `~/ros2_ws/src` 아래에 있어야 합니다.
+
+- `laser_filters`
+- `serial-ros2`
+- `sllidar_ros2`
+
+이 세 저장소는 AFTR repository와 별도로 관리됩니다. 실제 로봇에 적용할 때는 로봇에서 검증한 호환 버전을 사용하세요.
+
+최종 Workspace 예시는 다음과 같습니다.
 
 ```text
-<workspace>/
+~/ros2_ws/
 ├── src/
 │   ├── autonomous-following-towing-robot/
 │   ├── laser_filters/
@@ -29,7 +46,7 @@
 Fall Detection 모델 기본 경로:
 
 ```text
-Host:      <workspace>/models/fall_detection/yolov8n-pose.pt
+Host:      ~/ros2_ws/models/fall_detection/yolov8n-pose.pt
 Container: /models/fall_detection/yolov8n-pose.pt
 ```
 
@@ -60,7 +77,7 @@ Jetson도 동일한 환경 변수를 사용할 수 있습니다.
 ### Docker Image 생성
 
 ```bash
-cd ~/autonomous_following_towing_robot_ws/src/autonomous-following-towing-robot
+cd ~/ros2_ws/src/autonomous-following-towing-robot
 ./scripts/docker_build_laptop.sh
 ```
 
@@ -94,7 +111,7 @@ Laptop build 산출물은 `build_laptop/`, `install_laptop/`, `log_laptop/`에 �
 ### Docker Image 생성
 
 ```bash
-cd ~/260929_ws/src/autonomous-following-towing-robot
+cd ~/ros2_ws/src/autonomous-following-towing-robot
 ./scripts/docker_build_jetson.sh
 ```
 
@@ -130,7 +147,7 @@ Laptop의 amd64 build 산출물과 Jetson arm64 build 산출물을 공유하지 
 Serial alias는 Host udev rule을 사용합니다.
 
 ```bash
-cd ~/260929_ws/src/autonomous-following-towing-robot
+cd ~/ros2_ws/src/autonomous-following-towing-robot
 sudo ./scripts/create_udev_rules.sh
 ```
 
@@ -145,8 +162,10 @@ ls -l /dev/ttyMotor /dev/ttyLidar
 실제 로봇에서는 Jetson Host에서 다음 명령을 사용합니다.
 
 ```bash
-cd ~/260929_ws/src/autonomous-following-towing-robot
-./scripts/docker_run_jetson.sh bash -lc   'ros2 launch aftr_gui operator_system.launch.py'
+cd ~/ros2_ws/src/autonomous-following-towing-robot
+
+./scripts/docker_run_jetson.sh bash -lc \
+  'ros2 launch aftr_gui operator_system.launch.py'
 ```
 
 주행 전에는 반드시 로봇 주변을 비우고 즉시 정지할 수 있는 운영자가 현장에 있어야 합니다.
@@ -154,7 +173,8 @@ cd ~/260929_ws/src/autonomous-following-towing-robot
 GUI와 Fall Detection만 확인하고 base를 자동 기동하지 않으려면:
 
 ```bash
-./scripts/docker_run_jetson.sh bash -lc   'ros2 launch aftr_gui operator_system.launch.py auto_start_base:=false show_fall_image:=false'
+./scripts/docker_run_jetson.sh bash -lc \
+  'ros2 launch aftr_gui operator_system.launch.py auto_start_base:=false show_fall_image:=false'
 ```
 
 ## 7. 로봇 모델 확인
@@ -162,7 +182,8 @@ GUI와 Fall Detection만 확인하고 base를 자동 기동하지 않으려면:
 Laptop에서 URDF/RViz만 확인하려면:
 
 ```bash
-./scripts/docker_run_laptop.sh   ros2 launch aftr_description view_robot.launch.py
+./scripts/docker_run_laptop.sh \
+  ros2 launch aftr_description view_robot.launch.py
 ```
 
 ## 8. 다음 단계
