@@ -1,8 +1,9 @@
 // Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
 #pragma once
 
+#include <cstdint>
 #include <vector>
-#include <iostream>
+
 #include "mdbot_hardware/md_defines.hpp"
 
 namespace mdbot

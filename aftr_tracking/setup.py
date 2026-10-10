@@ -1,8 +1,11 @@
 # Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
 """Setup configuration for aftr_tracking."""
 
+
+# [User Code Begin]
 from glob import glob
 import os
+# [User Code End]
 
 from setuptools import find_packages
 from setuptools import setup
@@ -19,11 +22,13 @@ setup(
             ["resource/" + package_name],
         ),
         ("share/" + package_name, ["package.xml"]),
+        # [User Code Begin]
         ("share/" + package_name, ["README.md"]),
         (
             os.path.join("share", package_name, "launch"),
             glob(os.path.join("launch", "*.launch.py")),
         ),
+        # [User Code End]
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -38,9 +43,11 @@ setup(
     },
     entry_points={
         "console_scripts": [
+            # [User Code Begin]
             "person_follower = aftr_tracking.tracker_node:main",
             "person_follower_robust = aftr_tracking.curve_tracker_node:main",
             "person_follower_legacy = aftr_tracking.tracker_node:main",
+            # [User Code End]
         ]
     },
 )

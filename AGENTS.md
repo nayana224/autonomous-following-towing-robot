@@ -35,7 +35,7 @@
 
 ## Build and Test
 
-The commands below describe the existing manual `build/install/log` layout. For Docker, follow `docs/development/laptop-docker.md` or `docs/development/jetson-docker.md` and the architecture-specific paths.
+For normal setup and Docker usage, follow `docs/setup.md`. Keep test, lint, troubleshooting, and development-only commands in `docs/maintenance.md`.
 
 - Source ROS before ROS-related commands when needed: `source /opt/ros/humble/setup.bash`.
 - Source the workspace after building when needed: `source install/setup.bash`.
@@ -58,18 +58,18 @@ The commands below describe the existing manual `build/install/log` layout. For 
 - Hardware-dependent tests are not required for laptop CI. Do not run the default operator-system or motor bringup launch in laptop validation.
 - Use `/models` for read-only model files and `/data` for writable paths, maps, and poses. Do not add personal `/home/...` defaults; keep ROS parameters available for overrides.
 - Never share colcon build, install, or log outputs between amd64 and arm64 environments. Laptop Docker uses `build_laptop/`, `install_laptop/`, and `log_laptop/`; Jetson uses `build_jetson/`, `install_jetson/`, and `log_jetson/`. Keep these separate from host outputs.
-- Update the relevant `docs/development/*-docker.md` guide when Docker scripts, dependency versions, workspace paths, or validation commands change; keep a short summary in `README.md`.
+- Update `docs/setup.md` when Docker scripts, workspace paths, runtime devices, or deployment steps change; keep only a short quick-start summary in `README.md`.
 - Docker changes must preserve ROS runtime interfaces and hardware-sensitive behavior.
 - The production GUI entry point is `aftr_gui.operator_gui:main`; preserve safety-stop rendering, release confirmation, snapshot handling, and mode-manager ownership of automatic base startup.
 - Do not refactor `aftr_tracking`, `aftr_fall_detection`, `aftr_status_led`, or `aftr_path_manager` source outside explicit scope; path-only portability edits are the current exception.
 
 ## Documentation Rules
 
-- Write `AGENTS.md` and code comments in English. Write the main `README.md` and `docs/development/*-docker.md` primarily in Korean while retaining technical terms in English. Preserve the language of other existing docs unless a task requests a change.
+- Write `AGENTS.md` and code comments in English. Write the main `README.md` and user-facing documents under `docs/` primarily in Korean while retaining technical terms in English.
 - Update documentation whenever package boundaries, ROS interfaces, architecture, workflow assumptions, or safety behavior change.
 - Keep this `AGENTS.md` aligned with the current repository structure, package boundaries, and project-wide development rules.
-- Keep `README.md` concise as the project entry point; place detailed Docker commands in the matching `docs/development/*-docker.md` guide.
-- Keep README Quick Start to Docker image build, Container start, Workspace Build, and overlay source. Put Test commands, validation baselines, and known failures in `docs/testing.md` or the Laptop Docker guide.
+- Keep `README.md` concise as the project entry point; place installation and Docker details in `docs/setup.md`.
+- Keep README Quick Start to Docker image build, Container start, Workspace Build, and overlay source. Put test, lint, troubleshooting, and developer-only commands in `docs/maintenance.md`.
 - Describe Linux amd64 with Docker as the intended Laptop environment; identify Ubuntu 26 LTS amd64 separately as the verified Phase 1 host. Avoid volatile Test counts in README.
 - Put long explanations, design rationale, and refactoring guidance in `docs/`.
 - Follow the existing source conventions and review ROS interface and hardware behavior whenever related code changes.

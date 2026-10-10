@@ -10,160 +10,26 @@ rules, and the high-level orchestration used by the GUI-facing command
 services.
 """
 
-import json
 import time
 
 from nav2_msgs.srv import ClearEntireCostmap
-import rclpy
 from std_srvs.srv import Trigger
 
 from aftr_mode_manager.mode_state import RobotMode
-from aftr_mode_manager.runtime.process_supervisor import (
-    cleanup_registered_process_groups,
-)
+from aftr_mode_manager.workflow.path_events import is_blocked_path_event
+from aftr_mode_manager.workflow.path_events import is_terminal_path_failure_event
+from aftr_mode_manager.workflow.path_events import parse_path_status
 from aftr_mode_manager.workflow.state import WorkflowStateMixin
+from aftr_mode_manager.workflow.transitions import ACTIVE_NAV2_MODES
+from aftr_mode_manager.workflow.transitions import AUTONOMOUS_MODES
+from aftr_mode_manager.workflow.transitions import next_drive_direction
 
 
 class WorkflowManagerMixin(WorkflowStateMixin):
     """Provide workflow events, transitions, and command orchestration."""
 
-    AUTONOMOUS_MODES = {
-        RobotMode.AUTONOMOUS_READY,
-        RobotMode.AUTONOMOUS_DRIVING,
-    }
-
-    ACTIVE_NAV2_MODES = {
-        RobotMode.ALIGNMENT,
-        RobotMode.LOCALIZING,
-        RobotMode.AUTONOMOUS_READY,
-        RobotMode.AUTONOMOUS_DRIVING,
-    }
-
-    MANAGED_RUNTIME_NODE_NAMES = {
-        "/controller_manager",
-        "/diff_drive_controller",
-        "/joint_state_broadcaster",
-        "/laser_filter",
-        "/robot_state_publisher",
-        "/sllidar_node",
-        "/slam_toolbox",
-        "/path_manager",
-        "/person_follower",
-        "/amcl",
-        "/map_server",
-        "/controller_server",
-        "/planner_server",
-        "/smoother_server",
-        "/behavior_server",
-        "/bt_navigator",
-        "/waypoint_follower",
-        "/velocity_smoother",
-        "/lifecycle_manager_localization",
-        "/lifecycle_manager_navigation",
-        "/local_costmap/local_costmap",
-        "/global_costmap/global_costmap",
-    }
-
-    def visible_node_names(self):
-        """Return fully qualified ROS node names visible in the current graph."""
-        names = []
-        for node_name, namespace in self.get_node_names_and_namespaces():
-            if namespace == "/":
-                names.append(f"/{node_name}")
-            else:
-                names.append(f"{namespace.rstrip('/')}/{node_name}")
-        return names
-
-    def count_visible_node(self, fully_qualified_name):
-        """Count how many graph-visible nodes match one fully qualified name."""
-        return self.visible_node_names().count(fully_qualified_name)
-
-    def audit_stale_runtime_nodes_once(self):
-        """Serialize stale-runtime checks in the reentrant ROS executor."""
-        if not self.stale_runtime_audit_lock.acquire(blocking=False):
-            return
-        try:
-            self._audit_stale_runtime_nodes_once()
-        finally:
-            self.stale_runtime_audit_lock.release()
-
-    def _audit_stale_runtime_nodes_once(self):
-        """Confirm, clean, and recheck descendants from an older manager."""
-        if (
-            self.cleanup_stale_runtime_processes
-            and not self.stale_runtime_cleanup_attempted
-        ):
-            self.stale_runtime_cleanup_attempted = True
-            cleanup_ok, cleanup_messages = cleanup_registered_process_groups(
-                self.managed_process_registry_dir,
-                timeout_sec=self.stale_runtime_cleanup_timeout_sec,
-            )
-            stopped_process = False
-            for cleanup_message in cleanup_messages:
-                stopped_process = stopped_process or cleanup_message.startswith(
-                    "stopped stale managed process"
-                )
-                if cleanup_message.startswith("stopped stale managed process"):
-                    self.get_logger().warning(cleanup_message)
-                elif cleanup_ok:
-                    self.get_logger().info(cleanup_message)
-                else:
-                    self.get_logger().error(cleanup_message)
-            if stopped_process:
-                # Wait for DDS discovery to remove nodes from the stopped group.
-                self.stale_runtime_audit_count = 0
-                return
-
-        visible = set(self.visible_node_names())
-        stale_nodes = sorted(visible & self.MANAGED_RUNTIME_NODE_NAMES)
-        if not stale_nodes:
-            self.finish_stale_runtime_audit()
-            return
-
-        self.stale_runtime_audit_count += 1
-        attempts = max(1, int(self.stale_runtime_audit_attempts))
-        if self.stale_runtime_audit_count < attempts:
-            self.get_logger().warning(
-                "stale managed-runtime candidates are still visible; "
-                f"confirming again ({self.stale_runtime_audit_count}/{attempts}): "
-                + ", ".join(stale_nodes)
-            )
-            return
-
-        message = (
-            "refusing startup because nodes from an older operator runtime are "
-            "still visible: " + ", ".join(stale_nodes)
-        )
-        self.status.last_error = message
-        self.status.busy = False
-        self.get_logger().fatal(message)
-        self.publish_status()
-        # Exiting mode_manager causes operator_system.launch.py to shut down all
-        # of the new launch's sibling processes as well.
-        rclpy.shutdown()
-
-    def finish_stale_runtime_audit(self):
-        """Continue startup after stale nodes disappear or cleanup succeeds."""
-        if self.stale_runtime_audit_timer is not None:
-            self.stale_runtime_audit_timer.cancel()
-            self.destroy_timer(self.stale_runtime_audit_timer)
-            self.stale_runtime_audit_timer = None
-        self.get_logger().info(
-            "stale managed-runtime audit passed "
-            f"after {self.stale_runtime_audit_count} confirmation(s)"
-        )
-        if self.auto_start_base:
-            self.schedule_auto_start_base(delay_sec=0.2)
-
-    def schedule_auto_start_base(self, delay_sec):
-        """Schedule base startup once after the stale-runtime gate passes."""
-        if self.auto_start_base_timer is not None:
-            return
-        self.auto_start_base_timer = self.create_timer(
-            max(0.1, float(delay_sec)),
-            self.auto_start_base_once,
-            callback_group=self.callback_group,
-        )
+    AUTONOMOUS_MODES = AUTONOMOUS_MODES
+    ACTIVE_NAV2_MODES = ACTIVE_NAV2_MODES
 
     def follow_state_callback(self, msg):
         """Cache person follower state for GUI-facing status generation."""
@@ -272,12 +138,8 @@ class WorkflowManagerMixin(WorkflowStateMixin):
             self.status.last_command = "path_completed_alignment"
             self.status.transition_count += 1
             self.alignment_control_active = False
-            self.next_drive_direction = (
-                "forward"
-                if (
-                    self.active_drive_direction or self.pending_drive_direction
-                ) == "reverse"
-                else "reverse"
+            self.next_drive_direction = next_drive_direction(
+                self.active_drive_direction or self.pending_drive_direction
             )
             self.active_drive_direction = ""
             self.pending_drive_direction = ""
@@ -308,48 +170,18 @@ class WorkflowManagerMixin(WorkflowStateMixin):
 
     @staticmethod
     def parse_path_status(text):
-        """Parse a JSON path-manager status payload.
-
-        Args:
-            text: Raw text received from ``/path_manager/status``.
-
-        Returns:
-            Parsed dictionary when the payload is valid JSON, otherwise ``{}``.
-        """
-        text = text.strip()
-        if not text:
-            return {}
-        try:
-            data = json.loads(text)
-        except json.JSONDecodeError:
-            return {}
-        return data if isinstance(data, dict) else {}
+        """Parse a path-manager status payload."""
+        return parse_path_status(text)
 
     @staticmethod
     def is_blocked_path_event(event):
-        """Return whether a path-manager event means obstacle blocking."""
-        if not event:
-            return False
-
-        return (
-            "temporary failure" in event
-            or "obstacle" in event
-            or "blocked" in event
-        )
+        """Return whether a path event indicates obstacle blocking."""
+        return is_blocked_path_event(event)
 
     @staticmethod
     def is_terminal_path_failure_event(event):
-        """Return whether replay stopped and cannot recover by itself."""
-        normalized = str(event).strip().lower()
-        return (
-            normalized == "goal_rejected"
-            or normalized.startswith("aborted_status_")
-            or normalized.startswith("failed:")
-            or (
-                normalized.startswith("blocked:")
-                and "retry limit" in normalized
-            )
-        )
+        """Return whether a path event is a terminal replay failure."""
+        return is_terminal_path_failure_event(event)
 
     def _reject_if_error_state(self, response):
         """Reject a command when the current workflow mode is ``ERROR``."""
@@ -1007,7 +839,6 @@ class WorkflowManagerMixin(WorkflowStateMixin):
 
         if not self.ensure_path_manager_running(response):
             return response
-
         if not self._require_amcl_pose_ready(
             response,
             "AMCL pose is not ready; missing topics: ",
@@ -1028,15 +859,9 @@ class WorkflowManagerMixin(WorkflowStateMixin):
             self.notify_autonomous_failed()
             return response
 
-        if reverse:
-            path_client = self.path_follow_saved_path_reverse_client
-            path_service_name = "/path_manager/follow_saved_path_reverse"
-            direction_text = "reverse"
-        else:
-            path_client = self.path_follow_saved_path_client
-            path_service_name = "/path_manager/follow_saved_path"
-            direction_text = "forward"
-
+        path_client, path_service_name, direction_text = (
+            self._saved_path_request(reverse)
+        )
         self.pending_drive_direction = requested_direction
         path_service_succeeded = self.call_trigger_service(
             path_client,
@@ -1047,26 +872,59 @@ class WorkflowManagerMixin(WorkflowStateMixin):
             timeout_sec=float(self.path_replay_service_timeout_sec),
         )
         if not path_service_succeeded:
-            # A response can be lost, or a repeated button request can find an
-            # already active path. Reconcile from path_manager's periodic
-            # status instead of leaving the robot driving on the READY page.
-            if bool(self.latest_path_status.get("following_path", False)):
-                self.get_logger().warning(
-                    "saved-path service was not confirmed, but path_manager "
-                    "reports an active FollowPath; reconciling drive state"
-                )
-                self.last_service_error = ""
-            else:
-                self.pending_drive_direction = ""
-                detail = self.last_service_error or (
-                    f"failed to start {direction_text} saved path following"
-                )
-                self.notify_autonomous_failed()
-                return self.reject_response(
-                    response,
-                    detail,
-                )
+            failure_response = self._reconcile_saved_path_service_failure(
+                response,
+                direction_text,
+            )
+            if failure_response is not None:
+                return failure_response
 
+        immediate_response = self._saved_path_immediate_result(
+            response,
+            direction_text,
+        )
+        if immediate_response is not None:
+            return immediate_response
+
+        return self._complete_saved_path_start(
+            response,
+            requested_direction,
+            command_name,
+        )
+
+    def _saved_path_request(self, reverse):
+        if reverse:
+            return (
+                self.path_follow_saved_path_reverse_client,
+                "/path_manager/follow_saved_path_reverse",
+                "reverse",
+            )
+        return (
+            self.path_follow_saved_path_client,
+            "/path_manager/follow_saved_path",
+            "forward",
+        )
+
+    def _reconcile_saved_path_service_failure(self, response, direction_text):
+        # A response can be lost, or a repeated button request can find an
+        # already active path. Reconcile from path_manager's periodic status
+        # instead of leaving the robot driving on the READY page.
+        if bool(self.latest_path_status.get("following_path", False)):
+            self.get_logger().warning(
+                "saved-path service was not confirmed, but path_manager "
+                "reports an active FollowPath; reconciling drive state"
+            )
+            self.last_service_error = ""
+            return None
+
+        self.pending_drive_direction = ""
+        detail = self.last_service_error or (
+            f"failed to start {direction_text} saved path following"
+        )
+        self.notify_autonomous_failed()
+        return self.reject_response(response, detail)
+
+    def _saved_path_immediate_result(self, response, direction_text):
         # A very fast action rejection/completion can be reported by the path
         # status callback while this service call is still returning.
         if self.status.mode == RobotMode.ERROR:
@@ -1075,10 +933,8 @@ class WorkflowManagerMixin(WorkflowStateMixin):
                 self.status.last_error
                 or f"failed to start {direction_text} saved path following"
             )
-            return self.reject_response(
-                response,
-                detail,
-            )
+            return self.reject_response(response, detail)
+
         if (
             self.status.mode == RobotMode.ALIGNMENT
             and self.last_path_follow_event == "completed"
@@ -1089,6 +945,14 @@ class WorkflowManagerMixin(WorkflowStateMixin):
             self.publish_status()
             return response
 
+        return None
+
+    def _complete_saved_path_start(
+        self,
+        response,
+        requested_direction,
+        command_name,
+    ):
         self.status.last_error = ""
         self.active_drive_direction = requested_direction
         self.pending_drive_direction = ""

@@ -1,50 +1,62 @@
-# ROS Interfaces
+# ROS 인터페이스
 
-This document lists the operator-facing interfaces that other Autonomous Following and Towing Robot packages may rely on.
+이 문서는 AFTR package 간에 사용하는 주요 ROS 2 인터페이스를 정리합니다.
 
-## Public topics
+## 주요 Topic
 
-| Topic | Purpose |
+| Topic | 설명 |
 | --- | --- |
-| `/cmd_vel` | Robot velocity command |
-| `/odom` | Robot odometry |
+| `/cmd_vel` | 로봇 속도 명령 |
+| `/odom` | Odometry |
 | `/scan` | Filtered LiDAR scan |
-| `/map` | SLAM or localization map |
-| `/amcl_pose` | Localization pose estimate |
-| `/planned_path` | Saved or planned path visualization |
-| `/follow_state` | Compatible follower state: `SEARCH`, `FOLLOW`, or `OBSTACLE` |
-| `/tracking_detail` | Optional experimental-tracker diagnostics including lock state and target ID |
-| `/mode_manager/status` | GUI workflow and safety status |
-| `/mode_manager/audio_event` | Operator audio event |
-| `/mode_manager/led_event` | Operator LED event |
-| `/fall_detection/status` | Fall-detector observation state |
-| `/fall_detection/detected` | Latched fall observation |
-| `/fall_detection/heartbeat` | Detector liveness signal |
+| `/map` | SLAM / Localization map |
+| `/amcl_pose` | AMCL 위치 추정 결과 |
+| `/planned_path` | 경로 시각화 |
+| `/follow_state` | 작업자 추종 상태 |
+| `/tracking_detail` | Tracking 상세 상태 |
+| `/mode_manager/status` | GUI용 Workflow 및 Safety 상태 |
+| `/mode_manager/audio_event` | Audio event |
+| `/mode_manager/led_event` | LED event |
+| `/fall_detection/status` | Fall detector 상태 |
+| `/fall_detection/detected` | 낙상 감지 상태 |
+| `/fall_detection/heartbeat` | Detector heartbeat |
 
-## Public mode-manager commands
+`/follow_state`의 대표 상태는 `SEARCH`, `FOLLOW`, `OBSTACLE`입니다.
 
-- `/mode_manager/command/start_follow`
-- `/mode_manager/command/start_recording_follow`
-- `/mode_manager/command/finish_recording_for_alignment`
-- `/mode_manager/command/start_alignment`
-- `/mode_manager/command/skip_alignment`
-- `/mode_manager/command/finish_alignment`
-- `/mode_manager/command/prepare_autonomous`
-- `/mode_manager/command/path_forward_auto`
-- `/mode_manager/command/path_reverse_auto`
-- `/mode_manager/command/stop`
-- `/mode_manager/command/clear_error`
-- `/mode_manager/command/clear_safety_stop`
+## Mode Manager Command
 
-The GUI must only call commands listed in the current `allowed_commands` field, except for explicitly internal startup or recovery actions.
+주요 service는 다음과 같습니다.
 
-## Fall-detection service
+```text
+/mode_manager/command/start_follow
+/mode_manager/command/start_recording_follow
+/mode_manager/command/finish_recording_for_alignment
+/mode_manager/command/start_alignment
+/mode_manager/command/skip_alignment
+/mode_manager/command/finish_alignment
+/mode_manager/command/prepare_autonomous
+/mode_manager/command/path_forward_auto
+/mode_manager/command/path_reverse_auto
+/mode_manager/command/stop
+/mode_manager/command/clear_error
+/mode_manager/command/clear_safety_stop
+```
 
-- `/fall_detection/reset`: clear the detector latch after the mode manager validates an operator safety-release request.
+GUI는 일반적으로 현재 `/mode_manager/status`의 `allowed_commands`에 포함된 command만 요청합니다.
 
-## `/mode_manager/status`
+## Fall Detection Service
 
-The status is a JSON text payload. GUI-facing fields include:
+```text
+/fall_detection/reset
+```
+
+안전 정지 해제 조건이 충족된 뒤 mode manager가 detector latch를 초기화할 때 사용합니다.
+
+## Mode Manager Status
+
+`/mode_manager/status`는 JSON text payload를 사용합니다.
+
+주요 field:
 
 - `mode`
 - `busy`
@@ -60,21 +72,30 @@ The status is a JSON text payload. GUI-facing fields include:
 - `driving_message`
 - `safety_stop_active`
 - `safety_stop_in_progress`
-- `safety_stop_result`
-- `safety_interrupted_mode`
 - `fall_detector_alive`
 - `fall_detection_status`
 
-## Internal interfaces
+## Path Manager
 
-Services under `/mode_manager/internal/*` belong to runtime process management. The GUI must not use them for normal workflow control.
+Path Manager의 경로 기록·재생 service는 일반 운용에서 GUI가 직접 호출하지 않고 `aftr_mode_manager`가 순서를 관리합니다.
 
-Path-manager services such as `/path_manager/start_record`, `/path_manager/stop_record`, `/path_manager/save_pose`, and `/path_manager/publish_initial_pose` are coordinated by `aftr_mode_manager`.
+대표 interface:
 
-`/tracking_detail` is published only by the optional experimental tracker. Its `state` field can be `SEARCH`,
-`LOCKED`, `AMBIGUOUS`, `OCCLUDED`, `LOST`, or `TF_UNAVAILABLE`. Consumers that
-drive operator workflows must continue to use `/follow_state`.
+```text
+/path_manager/start_record
+/path_manager/stop_record
+/path_manager/save_pose
+/path_manager/publish_initial_pose
+```
 
-## TF frames
+## 주요 TF Frame
 
-The main frames are `map`, `odom`, `base_footprint`, `base_link`, and `laser`.
+```text
+map
+└── odom
+    └── base_footprint
+        └── base_link
+            └── laser
+```
+
+실제 TF 연결은 SLAM, Nav2 및 robot_state_publisher의 실행 상태에 따라 구성됩니다.

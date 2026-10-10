@@ -7,10 +7,14 @@
 import time
 
 from aftr_mode_manager.mode_state import RobotMode
+from aftr_mode_manager.workflow.transitions import ALLOWED_TRANSITIONS as WORKFLOW_TRANSITIONS
+from aftr_mode_manager.workflow.transitions import is_transition_allowed
 
 
 class WorkflowStateMixin:
     """Provide shared command ownership and validated mode transitions."""
+
+    ALLOWED_TRANSITIONS = WORKFLOW_TRANSITIONS
 
     def set_operator_message(self, message, publish=False):
         """Store one operator-facing progress message.
@@ -95,8 +99,8 @@ class WorkflowStateMixin:
         return self.set_mode(response, mode, command_name)
 
     def is_transition_allowed(self, current_mode, next_mode):
-        """Return whether a mode transition is allowed by the state table."""
-        return next_mode in self.ALLOWED_TRANSITIONS.get(current_mode, set())
+        """Return whether the requested mode transition is allowed."""
+        return is_transition_allowed(current_mode, next_mode)
 
     def set_mode(self, response, mode, command_name):
         """Apply a validated mode transition and fill the Trigger response."""

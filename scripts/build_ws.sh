@@ -18,3 +18,9 @@ if [[ "${ROS_DISTRO:-}" != humble ]]; then
 fi
 
 colcon --log-base "log_$build_target" build --build-base "build_$build_target" --install-base "install_$build_target" --symlink-install "$@"
+
+compile_commands_source="$workspace_root/build_$build_target/aftr_hardware/compile_commands.json"
+if [[ -f "$compile_commands_source" ]]; then
+  ln -sfn "../../build_$build_target/aftr_hardware/compile_commands.json" \
+    "$repo_root/compile_commands.json"
+fi

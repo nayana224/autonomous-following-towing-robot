@@ -6,6 +6,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+
+# [User Code Begin]
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 find_package(geometry_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 
@@ -20,5 +24,6 @@ install(TARGETS
   mdbot_teleop_keyboard
   DESTINATION lib/${PROJECT_NAME}
 )
+# [User Code End]
 
 ament_package()

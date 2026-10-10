@@ -4,8 +4,11 @@
 
 """Setup configuration for aftr_mode_manager."""
 
+
+# [User Code Begin]
 import os
 from glob import glob
+# [User Code End]
 
 from setuptools import find_packages
 from setuptools import setup
@@ -22,8 +25,10 @@ setup(
             ["resource/" + package_name],
         ),
         ("share/" + package_name, ["package.xml"]),
+        # [User Code Begin]
         ("share/" + package_name, ["README.md"]),
         (os.path.join("share", package_name, "docs"), glob("docs/*.md")),
+        # [User Code End]
     ],
     install_requires=["setuptools"],
     zip_safe=True,
@@ -38,10 +43,12 @@ setup(
     },
     entry_points={
         "console_scripts": [
+            # [User Code Begin]
             (
                 "mode_manager = "
                 "aftr_mode_manager.validated_map_mode_manager_node:main"
             ),
+            # [User Code End]
         ],
     },
 )

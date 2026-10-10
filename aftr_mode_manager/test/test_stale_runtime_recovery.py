@@ -6,6 +6,7 @@
 
 import threading
 
+from aftr_mode_manager.runtime.bringup_manager import BringupManagerMixin
 from aftr_mode_manager.workflow.manager import WorkflowManagerMixin
 
 
@@ -33,7 +34,7 @@ class _Logger:
         self.messages.append(("fatal", message))
 
 
-class _AuditHarness(WorkflowManagerMixin):
+class _AuditHarness(BringupManagerMixin):
     """Provide deterministic graph snapshots to the audit workflow."""
 
     def __init__(self, snapshots):
@@ -80,7 +81,7 @@ def test_verified_cleanup_gets_a_graph_settle_window(monkeypatch):
     """Successful cleanup must be followed by another graph check."""
     cleanup_calls = []
     monkeypatch.setattr(
-        "aftr_mode_manager.workflow.manager.cleanup_registered_process_groups",
+        "aftr_mode_manager.runtime.bringup_manager.cleanup_registered_process_groups",
         lambda registry_dir, timeout_sec: (
             cleanup_calls.append((registry_dir, timeout_sec)) or True,
             ["stopped stale managed process base_bringup: pgid=10"],

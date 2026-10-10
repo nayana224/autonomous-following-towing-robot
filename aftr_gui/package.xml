@@ -6,14 +6,13 @@
   <description>Operator GUI and integrated fall-safety launch for Autonomous Following and Towing Robot.</description>
   <maintainer email="inpyoi1304@gmail.com">pyo</maintainer>
   <license>Apache License 2.0</license>
-
+  <!-- [User Code Begin] -->
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>rclpy</depend>
   <depend>sensor_msgs</depend>
   <depend>std_msgs</depend>
   <depend>std_srvs</depend>
-
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
@@ -23,6 +22,7 @@
   <exec_depend>aftr_status_led</exec_depend>
   <exec_depend>python3-pyqt5</exec_depend>
   <exec_depend>realsense2_camera</exec_depend>
+  <!-- [User Code End] -->
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

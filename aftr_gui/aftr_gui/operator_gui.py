@@ -251,6 +251,10 @@ class RobotDashboard(QMainWindow):
         mode = values.get("mode", "UNKNOWN")
         busy = as_bool(values.get("busy", False))
 
+        self._apply_mode_status_values(values, mode)
+        self._refresh_mode_status_view(mode, busy)
+
+    def _apply_mode_status_values(self, values, mode):
         self.current_mode = mode
         self.last_command = str(values.get("last_command", self.last_command))
         self.last_error = str(values.get("last_error", self.last_error))
@@ -277,6 +281,7 @@ class RobotDashboard(QMainWindow):
             values.get("allowed_commands", []),
         )
 
+    def _refresh_mode_status_view(self, mode, busy):
         suffix = " (처리 중)" if busy and mode != "ERROR" else ""
         self.set_label_text(
             self.label_robot_status,
@@ -498,15 +503,9 @@ class RobotDashboard(QMainWindow):
         for button, (command, _enforce_allowed) in self.command_button_map.items():
             button.setEnabled(enabled and command in self.allowed_commands)
 
-        self.btn_follow.setEnabled(
-            enabled and follow_mode_available(self.allowed_commands)
-        )
-        self.btn_autonomous.setEnabled(
-            enabled and "prepare_autonomous" in self.allowed_commands
-        )
-        self.save_path_check.setEnabled(
-            enabled and follow_mode_available(self.allowed_commands)
-        )
+        follow_enabled = enabled and follow_mode_available(self.allowed_commands)
+        self.btn_follow.setEnabled(follow_enabled)
+        self.save_path_check.setEnabled(follow_enabled)
 
     def handle_joystick(self, x_axis, y_axis):
         """Store the latest joystick position for periodic publishing."""

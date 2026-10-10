@@ -166,7 +166,7 @@ class HardenedFallModeManagerNode(FallAwareModeManagerNode):
             self.publish_status()
 
             response = Trigger.Response()
-            result = super(FallAwareModeManagerNode, self).stop_workflow(response)
+            result = self._stop_workflow_for_safety(response)
             if not result.success:
                 result = self._recover_safety_cleanup(result)
 
@@ -194,6 +194,11 @@ class HardenedFallModeManagerNode(FallAwareModeManagerNode):
             self.status.safety_stop_in_progress = False
             self.command_lock.release()
             self.publish_status()
+
+    def _stop_workflow_for_safety(self, response):
+        # Keep safety cleanup tied to the base workflow stop implementation.
+        # Fall-aware latch handling is owned by this hardened layer.
+        return super(FallAwareModeManagerNode, self).stop_workflow(response)
 
     def _recover_safety_cleanup(self, failed_response):
         """Treat data-save failures as warnings when all motion processes stop."""
@@ -313,16 +318,8 @@ class HardenedFallModeManagerNode(FallAwareModeManagerNode):
 
     def start_recording_follow(self, response):
         """Start recording infrastructure before allowing follower motion."""
-        initial_process_state = {
-            "slam": self.slam_process.is_running(),
-            "path": self.path_process.is_running(),
-            "follower": self.follower_node.is_running(),
-        }
-        self.latest_path_status = {}
-        self.last_path_follow_event = "idle"
-        self.last_map_message_at = None
-        self.recording_session_started_at = time.monotonic()
-        self.reset_follow_runtime_state()
+        initial_process_state = self._recording_process_state()
+        self._prepare_recording_session()
 
         if not self.ensure_base_running(response):
             return response
@@ -333,19 +330,7 @@ class HardenedFallModeManagerNode(FallAwareModeManagerNode):
             return self._recording_start_failure(response, initial_process_state)
         if not self.ensure_path_manager_running(response):
             return self._recording_start_failure(response, initial_process_state)
-        if not self.wait_for_path_manager_service(
-            self.path_start_record_client,
-            "/path_manager/start_record",
-            timeout_sec=5.0,
-        ):
-            response.message = "failed to start path recording"
-            return self._recording_start_failure(response, initial_process_state)
-        if not self.call_trigger_service(
-            self.path_start_record_client,
-            "/path_manager/start_record",
-            timeout_sec=2.0,
-        ) and not self.wait_for_path_recording_active(timeout_sec=2.0):
-            response.message = "failed to start path recording"
+        if not self._start_path_recording(response):
             return self._recording_start_failure(response, initial_process_state)
         if not self.ensure_follower_node_running(response):
             return self._recording_start_failure(response, initial_process_state)
@@ -361,6 +346,41 @@ class HardenedFallModeManagerNode(FallAwareModeManagerNode):
         if previous_mode != RobotMode.RECORDING_FOLLOW:
             self.notify_follow_start(recording=True)
         return mode_response
+
+    def _recording_process_state(self):
+        return {
+            "slam": self.slam_process.is_running(),
+            "path": self.path_process.is_running(),
+            "follower": self.follower_node.is_running(),
+        }
+
+    def _prepare_recording_session(self):
+        self.latest_path_status = {}
+        self.last_path_follow_event = "idle"
+        self.last_map_message_at = None
+        self.recording_session_started_at = time.monotonic()
+        self.reset_follow_runtime_state()
+
+    def _start_path_recording(self, response):
+        if not self.wait_for_path_manager_service(
+            self.path_start_record_client,
+            "/path_manager/start_record",
+            timeout_sec=5.0,
+        ):
+            response.message = "failed to start path recording"
+            return False
+
+        if self.call_trigger_service(
+            self.path_start_record_client,
+            "/path_manager/start_record",
+            timeout_sec=2.0,
+        ):
+            return True
+        if self.wait_for_path_recording_active(timeout_sec=2.0):
+            return True
+
+        response.message = "failed to start path recording"
+        return False
 
     def _wait_for_fresh_map(self, timeout_sec):
         started_at = self.recording_session_started_at or time.monotonic()

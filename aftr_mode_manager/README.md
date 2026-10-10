@@ -1,63 +1,76 @@
 # aftr_mode_manager
 
-`aftr_mode_manager` owns the operator workflow, command serialization, managed-process order, readiness checks, recovery, and fall-safety latch.
+`aftr_mode_manager`는 AFTR의 전체 운용 Workflow와 안전 상태를 관리하는 핵심 ROS 2 package입니다.
 
-## Main responsibilities
+## 역할
 
-- start and stop base, SLAM, path manager, follower, Nav2, and related runtime processes
-- expose operator-facing command services
-- publish `/mode_manager/status`
-- reject overlapping commands
-- roll back partially started workflows
-- coordinate safety cleanup and operator-approved release
+- Base, SLAM, Path Manager, Tracking, Nav2 등 runtime process의 시작·종료 순서 관리
+- Operator command service 제공
+- `/mode_manager/status` 발행
+- 동시에 여러 command가 실행되지 않도록 직렬화
+- 부분적으로 시작된 Workflow 실패 시 rollback
+- 낙상 및 detector 장애 시 Safety Stop 처리
 
-## Main workflow
+## 기본 Workflow
 
 ```text
 IDLE
-→ FOLLOW or RECORDING_FOLLOW
+→ FOLLOW / RECORDING_FOLLOW
 → ALIGNMENT
 → LOCALIZING
 → AUTONOMOUS_READY
 → AUTONOMOUS_DRIVING
 ```
 
-Recording-follow startup is ordered as follows:
+### 경로 저장 추종 시작
 
 ```text
-base ready
-→ SLAM ready
-→ fresh /map
-→ path manager ready
-→ recording active
-→ follower start
+Base 준비
+→ SLAM 준비
+→ 새 /map 확인
+→ Path Manager 준비
+→ 경로 기록 시작
+→ Follower 시작
 ```
 
-Localization startup stops SLAM first, confirms process shutdown, starts Nav2, waits for lifecycle readiness, publishes the initial pose, and confirms AMCL output.
+### Localization 시작
 
-Recording completion requires the map YAML and referenced image to be a new, complete pair. Map-save failure stops the workflow before localization. Error reset also verifies that every upper-layer managed process group exited before returning to `IDLE`.
+```text
+SLAM 종료
+→ 종료 상태 확인
+→ Nav2 시작
+→ Lifecycle 준비 확인
+→ Initial Pose 전달
+→ AMCL Pose 확인
+```
 
-## Public commands
+## Public Command
 
-The main services are under `/mode_manager/command/*`, including follow, recording follow, alignment, autonomous preparation, replay, stop, error clear, and safety-stop clear.
+일반 운용 command는 `/mode_manager/command/*` 아래에 있습니다.
 
-Low-level process services under `/mode_manager/internal/*` are implementation details and should not be called by the GUI during normal operation.
+대표 command:
+
+- 작업자 추종
+- 경로 저장 추종
+- 정렬 시작/완료
+- 자율주행 준비
+- 저장 경로 정방향·복귀 재생
+- 작업 중지
+- Error 해제
+- Safety Stop 해제
+
+`/mode_manager/internal/*` service는 내부 process 관리용이므로 GUI의 일반 Workflow에서는 직접 호출하지 않습니다.
 
 ## Safety
 
-A fall or detector-heartbeat loss can activate a latched safety stop. The interrupted task is stopped and is not resumed automatically. Release requires `/mode_manager/command/clear_safety_stop` and final validation by the mode manager.
+낙상 감지 또는 detector heartbeat 손실 시 Safety Stop이 latch될 수 있습니다.
 
-## Build
+중단된 작업은 자동으로 재개하지 않으며, 운영자의 안전 확인 후 명시적인 해제 절차를 거쳐 IDLE로 복귀합니다.
 
-```bash
-source /opt/ros/humble/setup.bash
-cd ~/autonomous_following_towing_robot_ws
-colcon build --symlink-install --packages-select aftr_mode_manager
-```
+## 관련 문서
 
-## Related documentation
-
-- [Architecture](../docs/architecture.md)
-- [ROS interfaces](../docs/interfaces.md)
-- [Safety](../docs/safety.md)
-- [Validation checklist](../docs/testing.md)
+- [시스템 구조](../docs/architecture.md)
+- [ROS 인터페이스](../docs/interfaces.md)
+- [안전 정책](../docs/safety.md)
+- [설치 및 실행](../docs/setup.md)
+- [개발 및 유지보수](../docs/maintenance.md)

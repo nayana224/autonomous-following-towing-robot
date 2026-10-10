@@ -7,18 +7,23 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
+# [User Code Begin]
 install(DIRECTORY
   launch
   config
-  scripts
   rviz
   DESTINATION share/${PROJECT_NAME}
 )
 
-# Preserve executable permissions for the installed udev setup script.
+install(FILES
+  scripts/99-mdbot-devices.rules
+  DESTINATION share/${PROJECT_NAME}/scripts
+)
+
 install(PROGRAMS
   scripts/create_udev_rules.sh
   DESTINATION share/${PROJECT_NAME}/scripts
 )
+# [User Code End]
 
 ament_package()

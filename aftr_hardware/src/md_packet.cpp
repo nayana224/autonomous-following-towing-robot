@@ -1,6 +1,8 @@
 // Copyright (c) 2026 Autonomous Following and Towing Robot Contributors
 #include "mdbot_hardware/md_packet.hpp"
 
+#include <cstddef>
+
 namespace mdbot
 {
 
@@ -13,7 +15,7 @@ uint8_t MDPacket::calcCheckSum(const std::vector<uint8_t>& packet)
   uint8_t sum = 0;
 
   // Callers pass the packet body before appending the checksum byte.
-  for (size_t i = 0; i < packet.size(); i++)
+  for (std::size_t i = 0; i < packet.size(); i++)
   {
     sum += packet[i];
   }
@@ -51,7 +53,7 @@ std::vector<std::vector<uint8_t>> MDPacket::parseBuffer(std::vector<uint8_t>& bu
     if (buffer[0] == HEADER_TMID && buffer[1] == HEADER_RMID)
     {
       uint8_t data_len = buffer[4];
-      size_t total_packet_len = 6 + data_len;
+      std::size_t total_packet_len = 6 + data_len;
 
       // Wait until the entire packet is buffered.
       if (buffer.size() < total_packet_len)
@@ -99,7 +101,7 @@ std::vector<uint8_t> MDPacket::getData(const std::vector<uint8_t>& packet)
   if (packet.size() < 6) return data;
 
   uint8_t len = packet[4];
-  if (packet.size() < static_cast<size_t>(6 + len)) return data;
+  if (packet.size() < static_cast<std::size_t>(6 + len)) return data;
 
   data.assign(packet.begin() + 5, packet.begin() + 5 + len);
   return data;

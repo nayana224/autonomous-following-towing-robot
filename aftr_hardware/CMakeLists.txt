@@ -5,8 +5,10 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-
 find_package(ament_cmake REQUIRED)
+
+# [User Code Begin]
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(hardware_interface REQUIRED)
 find_package(pluginlib REQUIRED)
@@ -56,6 +58,6 @@ ament_export_dependencies(
 
 ament_export_include_directories(include)
 ament_export_libraries(mdbot_hardware)
-
+# [User Code End]
 
 ament_package()
